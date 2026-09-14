@@ -79,7 +79,7 @@
 **Acceptance scenarios:** see ### US-2.5 under Acceptance Criteria
 
 ## Feature 3: Ingredient Catalog Management
-**Short name:** `ingredient-catalog-management` · **Depends on:** Feature 1
+**Short name:** `ingredient-catalog-management` · **Depends on:** Feature 1, Feature 2
 ### US-3.1 Add a catalog ingredient
 **As a** signed-in user
 **I want to** add an ingredient with a name, a unit of measure, and a price per unit
@@ -111,9 +111,81 @@
 
 
 
-4) Ingredients Management | features/feature-4-ingredients-management
+## Feature 4: Ingredients Management
+**File Name:** features/feature-4-ingredients-management
+### US-4.1: Create an ingredient
+**As a** Authorized User  
+**I want to** create an ingredient item  
+**So that** I can use the ingredient in various recipes
 
-5) Ingredients List Management | features/feature-5-ingredients-list-management
-    Depend on: Ingredients Management
+**Priority:** P1  
+**Independent test:** Create a valid usable ingredient  
+**Acceptance scenarios:** see ### US-4.1 under Acceptance Criteria
 
-6) Profile Management | features/feature-6-profile-management
+### US-4.2 Edit an ingredient 
+**As a** Authorized User  
+**I want to** be able to edit the values in an ingredient  
+**So that** I can change the ingredient’s values, such as units of measurement and price per unit, to be different than what was inputted on creation
+
+**Priority:** P1  
+**Independent test:** Successfully edit an existing ingredient  
+**Acceptance scenarios:** see ### US-4.2 under Acceptance Criteria
+
+### US-4.3 Delete an ingredient
+**As a** Authorized User  
+**I want to** delete an existing ingredient  
+**So that** I can no longer see or include it in recipes
+
+**Priority:** P1  
+**Independent test:** Delete an existing ingredient and clear its data  
+**Acceptance scenarios:** see ### US-4.3 under Acceptance Criteria
+
+## Feature 5: Ingredients List Management
+**File Name:** features/feature-5-ingredients-list-management 
+**Depend on:** Ingredients Management
+### US-5.1: View created ingredients
+**As a** Authorized User  
+**I want to** view the list of created ingredients  
+**So that** I can keep track of which ingredients the software knows about
+
+**Priority:** P1  
+**Independent test:** Display all created ingredients  
+**Acceptance scenarios:** see ### US-5.1 under Acceptance Criteria
+
+### US-5.2 Edit existing ingredients 
+**As a** Authorized User  
+**I want to** be able to edit the values of any created ingredient  
+**So that** I can change the values, such as units of measurement and price per unit, of any created ingredient to be different than what was inputted on creation
+
+**Priority:** P1  
+**Independent test:** Edit the existing ingredients  
+**Acceptance scenarios:** see ### US-5.2 under Acceptance Criteria
+
+### US-5.3 Delete existing ingredients
+**As a** Authorized User  
+**I want to** delete any of the existing ingredient s 
+**So that** I can no longer see or include them in recipes
+
+**Priority:** P1  
+**Independent test:** Delete any existing ingredient and clear its data  
+**Acceptance scenarios:** see ### US-5.3 under Acceptance Criteria
+
+## Feature 6: Profile Management
+**File Name:** features/feature-6-profile-management
+### US-6.1: View Account
+**As a** Authorized User  
+**I want to** View the details of my account  
+**So that** I can see the name and username of my profile
+
+**Priority:** P1  
+**Independent test:** View the stored user data  
+**Acceptance scenarios:** see ### US-6.1 under Acceptance Criteria
+
+### US-6.2: Log out
+**As a** Logged-in User 
+**I want to** press the log-out button and sign out  
+**So that** I am no longer logged into the program
+
+**Priority:** P1  
+**Independent test:** Log the user out and clear the local cache of user’s credentials  
+**Acceptance scenarios:** see ### US-6.2 under Acceptance Criteria
