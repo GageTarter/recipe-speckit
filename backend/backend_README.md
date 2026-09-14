@@ -53,7 +53,8 @@ npm install
    - DB_PW = '**your-local-database-password**'
    - DB_USER = '**your-local-database-username**' (usually "root")
    - DB_NAME = '**your-local-database-name**' (example: "recipe_db")
-   - SECRET_KEY = 'xT1tdO3CfMH01pjxC+guN1LWSt2nKvr5td6KUpw7Czg='
+   - SECRET_KEY = generate your own with:
+     `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
 
 6. Compile and run the project locally.
 
