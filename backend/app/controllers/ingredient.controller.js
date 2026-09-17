@@ -1,34 +1,60 @@
 const db = require("../models");
 const Ingredient = db.ingredient;
-const Op = db.Sequelize.Op;
+
+function parseIngredientId(param) {
+  const id = parseInt(param, 10);
+  return Number.isNaN(id) ? null : id;
+}
+
+function validateIngredientFields(body) {
+  const name = typeof body.name === "string" ? body.name.trim() : body.name;
+  const unit = typeof body.unit === "string" ? body.unit.trim() : body.unit;
+  const rawPrice = body.pricePerUnit;
+
+  if (name === undefined || name === "") {
+    return { error: "Name cannot be empty for ingredient!" };
+  }
+  if (typeof name === "string" && name.length > 100) {
+    return { error: "Ingredient name must be 100 characters or fewer." };
+  }
+  if (unit === undefined || unit === "") {
+    return { error: "Unit cannot be empty for ingredient!" };
+  }
+  if (typeof unit === "string" && unit.length > 100) {
+    return { error: "Ingredient unit must be 100 characters or fewer." };
+  }
+  if (rawPrice === undefined || rawPrice === null || rawPrice === "") {
+    return { error: "Price per unit cannot be empty for ingredient!" };
+  }
+  const pricePerUnit = Number(rawPrice);
+  if (Number.isNaN(pricePerUnit)) {
+    return { error: "Ingredient price per unit must be a number." };
+  }
+
+  return { name, unit, pricePerUnit };
+}
+
+function notFound(res, id) {
+  return res.status(404).send({
+    message: `Ingredient with id=${id} not found.`,
+  });
+}
 
 // Create and Save a new Ingredient
 exports.create = (req, res) => {
-  // Validate request
-  if (req.body.name === undefined) {
-    const error = new Error("Name cannot be empty for ingredient!");
-    error.statusCode = 400;
-    throw error;
-  } else if (req.body.unit === undefined) {
-    const error = new Error("Unit cannot be empty for ingredient!");
-    error.statusCode = 400;
-    throw error;
-  } else if (req.body.pricePerUnit === undefined) {
-    const error = new Error("Price per unit cannot be empty for ingredient!");
-    error.statusCode = 400;
-    throw error;
+  const parsed = validateIngredientFields(req.body);
+  if (parsed.error) {
+    return res.status(400).send({ message: parsed.error });
   }
 
-  // Create a Ingredient
-  const ingredient = {
-    name: req.body.name,
-    unit: req.body.unit,
-    pricePerUnit: req.body.pricePerUnit,
-  };
-  // Save Ingredient in the database
-  Ingredient.create(ingredient)
+  Ingredient.create({
+    name: parsed.name,
+    unit: parsed.unit,
+    pricePerUnit: parsed.pricePerUnit,
+    userId: req.user.id,
+  })
     .then((data) => {
-      res.send(data);
+      res.status(201).send(data);
     })
     .catch((err) => {
       res.status(500).send({
@@ -38,18 +64,12 @@ exports.create = (req, res) => {
     });
 };
 
-// Retrieve all Ingredients from the database.
+// Retrieve all Ingredients owned by the authenticated user
 exports.findAll = (req, res) => {
-  const ingredientId = req.query.ingredientId;
-  var condition = ingredientId
-    ? {
-        id: {
-          [Op.like]: `%${ingredientId}%`,
-        },
-      }
-    : null;
-
-  Ingredient.findAll({ where: condition, order: [["name", "ASC"]] })
+  Ingredient.findAll({
+    where: { userId: req.user.id },
+    order: [["name", "ASC"]],
+  })
     .then((data) => {
       res.send(data);
     })
@@ -63,10 +83,16 @@ exports.findAll = (req, res) => {
 
 // Find a single Ingredient with an id
 exports.findOne = (req, res) => {
-  const id = req.params.id;
+  const id = parseIngredientId(req.params.id);
+  if (id === null) {
+    return res.status(400).send({ message: "Invalid ingredientId." });
+  }
 
-  Ingredient.findByPk(id)
+  Ingredient.findOne({ where: { id, userId: req.user.id } })
     .then((data) => {
+      if (!data) {
+        return notFound(res, id);
+      }
       res.send(data);
     })
     .catch((err) => {
@@ -77,36 +103,59 @@ exports.findOne = (req, res) => {
 };
 
 // Update a Ingredient by the id in the request
-exports.update = (req, res) => {
-  const id = req.params.id;
+exports.update = async (req, res) => {
+  const id = parseIngredientId(req.params.id);
+  if (id === null) {
+    return res.status(400).send({ message: "Invalid ingredientId." });
+  }
 
-  Ingredient.update(req.body, {
-    where: { id: id },
-  })
-    .then((num) => {
-      if (num == 1) {
-        res.send({
-          message: "Ingredient was updated successfully.",
-        });
-      } else {
-        res.send({
-          message: `Cannot update Ingredient with id=${id}. Maybe Ingredient was not found or req.body is empty!`,
-        });
-      }
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message: err.message || "Error updating Ingredient with id=" + id,
-      });
+  const parsed = validateIngredientFields(req.body);
+  if (parsed.error) {
+    return res.status(400).send({ message: parsed.error });
+  }
+
+  try {
+    const existing = await Ingredient.findOne({
+      where: { id, userId: req.user.id },
     });
+    if (!existing) {
+      return notFound(res, id);
+    }
+
+    const number = await Ingredient.update(
+      {
+        name: parsed.name,
+        unit: parsed.unit,
+        pricePerUnit: parsed.pricePerUnit,
+      },
+      { where: { id, userId: req.user.id } }
+    );
+
+    if (number == 1) {
+      res.send({
+        message: "Ingredient was updated successfully.",
+      });
+    } else {
+      res.send({
+        message: `Cannot update Ingredient with id=${id}. Maybe Ingredient was not found or req.body is empty!`,
+      });
+    }
+  } catch (err) {
+    res.status(500).send({
+      message: err.message || "Error updating Ingredient with id=" + id,
+    });
+  }
 };
 
 // Delete a Ingredient with the specified id in the request
 exports.delete = (req, res) => {
-  const id = req.params.id;
+  const id = parseIngredientId(req.params.id);
+  if (id === null) {
+    return res.status(400).send({ message: "Invalid ingredientId." });
+  }
 
   Ingredient.destroy({
-    where: { id: id },
+    where: { id, userId: req.user.id },
   })
     .then((number) => {
       if (number == 1) {
@@ -114,9 +163,7 @@ exports.delete = (req, res) => {
           message: "Ingredient was deleted successfully!",
         });
       } else {
-        res.send({
-          message: `Cannot delete Ingredient with id=${id}. Maybe Ingredient was not found!`,
-        });
+        return notFound(res, id);
       }
     })
     .catch((err) => {
@@ -126,10 +173,10 @@ exports.delete = (req, res) => {
     });
 };
 
-// Delete all Ingredients from the database.
+// Delete all Ingredients for the authenticated user
 exports.deleteAll = (req, res) => {
   Ingredient.destroy({
-    where: {},
+    where: { userId: req.user.id },
     truncate: false,
   })
     .then((number) => {
