@@ -1,33 +1,18 @@
 <script setup>
-import { onMounted } from "vue";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import IngredientServices from "../services/IngredientServices.js";
-
-const units = [
-  "cup",
-  "gallon",
-  "gram",
-  "kilogram",
-  "liter",
-  "milliliter",
-  "ounce",
-  "pint",
-  "piece",
-  "pound",
-  "quart",
-  "tablespoon",
-  "teaspoon",
-  "unit",
-];
 
 const ingredients = ref([]);
 const isAdd = ref(false);
 const isEdit = ref(false);
+const isDelete = ref(false);
+const loading = ref(false);
 const user = ref(null);
-const snackbar = ref({
-  value: false,
-  color: "",
-  text: "",
+const apiError = ref("");
+const fieldErrors = ref({
+  name: "",
+  unit: "",
+  pricePerUnit: "",
 });
 const newIngredient = ref({
   id: undefined,
@@ -35,64 +20,114 @@ const newIngredient = ref({
   unit: undefined,
   pricePerUnit: undefined,
 });
+const ingredientToDelete = ref(null);
 
 onMounted(async () => {
-  await getIngredients();
   user.value = JSON.parse(localStorage.getItem("user"));
+  await getIngredients();
 });
 
+function trimValue(value) {
+  return value == null ? "" : String(value).trim();
+}
+
+function clearFieldErrors() {
+  fieldErrors.value = { name: "", unit: "", pricePerUnit: "" };
+}
+
+function validateForm() {
+  clearFieldErrors();
+  const name = trimValue(newIngredient.value.name);
+  const unit = trimValue(newIngredient.value.unit);
+  const pricePerUnit = trimValue(newIngredient.value.pricePerUnit);
+  let valid = true;
+  if (!name) {
+    fieldErrors.value.name = "Ingredient name is required.";
+    valid = false;
+  }
+  if (!unit) {
+    fieldErrors.value.unit = "Ingredient unit is required.";
+    valid = false;
+  }
+  if (!pricePerUnit) {
+    fieldErrors.value.pricePerUnit = "Ingredient price per unit is required.";
+    valid = false;
+  }
+  return valid;
+}
+
+function apiMessage(error) {
+  return error?.response?.data?.message || "Something went wrong.";
+}
+
 async function getIngredients() {
+  loading.value = true;
+  apiError.value = "";
   await IngredientServices.getIngredients()
     .then((response) => {
       ingredients.value = response.data;
     })
     .catch((error) => {
-      console.log(error);
-      snackbar.value.value = true;
-      snackbar.value.color = "error";
-      snackbar.value.text = error.response.data.message;
+      apiError.value = apiMessage(error);
     });
+  loading.value = false;
 }
 
 async function addIngredient() {
-  isAdd.value = false;
-  delete newIngredient.id;
-  await IngredientServices.addIngredient(newIngredient.value)
-    .then(() => {
-      snackbar.value.value = true;
-      snackbar.value.color = "green";
-      snackbar.value.text = `${newIngredient.value.name} added successfully!`;
+  apiError.value = "";
+  if (!validateForm()) {
+    return;
+  }
+  const payload = { ...newIngredient.value };
+  delete payload.id;
+  await IngredientServices.addIngredient(payload)
+    .then(async () => {
+      isAdd.value = false;
+      await getIngredients();
     })
     .catch((error) => {
-      console.log(error);
-      snackbar.value.value = true;
-      snackbar.value.color = "error";
-      snackbar.value.text = error.response.data.message;
+      apiError.value = apiMessage(error);
     });
-  await getIngredients();
 }
 
 async function updateIngredient() {
-  isEdit.value = false;
+  apiError.value = "";
+  if (!validateForm()) {
+    return;
+  }
   await IngredientServices.updateIngredient(newIngredient.value)
-    .then(() => {
-      snackbar.value.value = true;
-      snackbar.value.color = "green";
-      snackbar.value.text = `${newIngredient.name} updated successfully!`;
+    .then(async () => {
+      isEdit.value = false;
+      await getIngredients();
     })
     .catch((error) => {
-      console.log(error);
-      snackbar.value.value = true;
-      snackbar.value.color = "error";
-      snackbar.value.text = error.response.data.message;
+      apiError.value = apiMessage(error);
     });
-  await getIngredients();
+}
+
+async function confirmDelete() {
+  apiError.value = "";
+  const id = ingredientToDelete.value?.id;
+  isDelete.value = false;
+  await IngredientServices.deleteIngredient(id)
+    .then(async () => {
+      ingredientToDelete.value = null;
+      await getIngredients();
+    })
+    .catch((error) => {
+      apiError.value = apiMessage(error);
+    });
 }
 
 function openAdd() {
-  newIngredient.value.name = undefined;
-  newIngredient.value.unit = undefined;
-  newIngredient.value.pricePerUnit = undefined;
+  newIngredient.value = {
+    id: undefined,
+    name: undefined,
+    unit: undefined,
+    pricePerUnit: undefined,
+  };
+  clearFieldErrors();
+  apiError.value = "";
   isAdd.value = true;
 }
 
@@ -101,10 +136,14 @@ function closeAdd() {
 }
 
 function openEdit(item) {
-  newIngredient.value.id = item.id;
-  newIngredient.value.name = item.name;
-  newIngredient.value.unit = item.unit;
-  newIngredient.value.pricePerUnit = item.pricePerUnit;
+  newIngredient.value = {
+    id: item.id,
+    name: item.name,
+    unit: item.unit,
+    pricePerUnit: item.pricePerUnit,
+  };
+  clearFieldErrors();
+  apiError.value = "";
   isEdit.value = true;
 }
 
@@ -112,8 +151,14 @@ function closeEdit() {
   isEdit.value = false;
 }
 
-function closeSnackBar() {
-  snackbar.value.value = false;
+function openDelete(item) {
+  ingredientToDelete.value = item;
+  isDelete.value = true;
+}
+
+function closeDelete() {
+  isDelete.value = false;
+  ingredientToDelete.value = null;
 }
 </script>
 
@@ -121,17 +166,32 @@ function closeSnackBar() {
   <v-container>
     <div id="body">
       <v-row align="center" class="mb-4">
-        <v-col cols="10"
-          ><v-card-title class="pl-0 text-h4 font-weight-bold"
+        <v-col cols="10">
+          <v-card-title class="pl-0 text-h4 font-weight-bold"
             >Ingredients
           </v-card-title>
         </v-col>
         <v-col class="d-flex justify-end" cols="2">
-          <v-btn v-if="user !== null" color="accent" @click="openAdd()"
-            >Add</v-btn
+          <v-btn
+            v-if="user !== null"
+            color="primary"
+            variant="elevated"
+            class="oc-cta"
+            @click="openAdd()"
+            >+ New Ingredient</v-btn
           >
         </v-col>
       </v-row>
+
+      <v-progress-linear v-if="loading" indeterminate color="primary" />
+
+      <v-alert
+        v-if="apiError"
+        type="error"
+        density="compact"
+        class="mb-4"
+        >{{ apiError }}</v-alert
+      >
 
       <v-table class="rounded-lg elevation-5">
         <thead>
@@ -143,22 +203,35 @@ function closeSnackBar() {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="item in ingredients" :key="item.name">
+          <tr v-for="item in ingredients" :key="item.id">
             <td>{{ item.name }}</td>
             <td>{{ item.unit }}</td>
             <td>${{ item.pricePerUnit }}</td>
             <td>
-              <v-icon
+              <v-btn
+                icon
                 size="small"
-                icon="mdi-pencil"
+                variant="text"
+                aria-label="Edit Ingredient"
                 @click="openEdit(item)"
-              ></v-icon>
+              >
+                <v-icon size="small" icon="mdi-pencil"></v-icon>
+              </v-btn>
+              <v-btn
+                icon
+                size="small"
+                variant="text"
+                aria-label="Delete ingredient"
+                @click="openDelete(item)"
+              >
+                <v-icon size="small" icon="mdi-delete"></v-icon>
+              </v-btn>
             </td>
           </tr>
         </tbody>
       </v-table>
 
-      <v-dialog persistent :model-value="isAdd || isEdit" width="800">
+      <v-dialog persistent contained :model-value="isAdd || isEdit" width="800">
         <v-card class="rounded-lg elevation-5">
           <v-card-item>
             <v-card-title class="headline mb-2"
@@ -166,23 +239,33 @@ function closeSnackBar() {
             </v-card-title>
           </v-card-item>
           <v-card-text>
+            <v-alert
+              v-if="apiError"
+              type="error"
+              density="compact"
+              class="mb-4"
+              >{{ apiError }}</v-alert
+            >
             <v-text-field
               v-model="newIngredient.name"
               label="Name"
               required
             ></v-text-field>
-            <v-select
+            <div v-if="fieldErrors.name">{{ fieldErrors.name }}</div>
+            <v-text-field
               v-model="newIngredient.unit"
-              :items="units"
               label="Unit"
               required
-            >
-            </v-select>
+            ></v-text-field>
+            <div v-if="fieldErrors.unit">{{ fieldErrors.unit }}</div>
             <v-text-field
               v-model="newIngredient.pricePerUnit"
               label="Price Per Unit"
-              type="number"
+              required
             ></v-text-field>
+            <div v-if="fieldErrors.pricePerUnit">
+              {{ fieldErrors.pricePerUnit }}
+            </div>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -195,6 +278,7 @@ function closeSnackBar() {
             <v-btn
               variant="flat"
               color="primary"
+              class="oc-cta"
               @click="
                 isAdd ? addIngredient() : isEdit ? updateIngredient() : false
               "
@@ -205,19 +289,30 @@ function closeSnackBar() {
           </v-card-actions>
         </v-card>
       </v-dialog>
-      <v-snackbar v-model="snackbar.value" rounded="pill">
-        {{ snackbar.text }}
 
-        <template v-slot:actions>
-          <v-btn
-            :color="snackbar.color"
-            variant="text"
-            @click="closeSnackBar()"
-          >
-            Close
-          </v-btn>
-        </template>
-      </v-snackbar>
+      <v-dialog persistent contained :model-value="isDelete" width="500">
+        <v-card class="rounded-lg elevation-5">
+          <v-card-item>
+            <v-card-title class="headline mb-2">Delete ingredient</v-card-title>
+          </v-card-item>
+          <v-card-text>
+            Remove {{ ingredientToDelete?.name }} from your catalogue?
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn variant="flat" color="secondary" @click="closeDelete()"
+              >Close</v-btn
+            >
+            <v-btn
+              variant="flat"
+              color="primary"
+              class="oc-cta"
+              @click="confirmDelete()"
+              >Delete</v-btn
+            >
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
     </div>
   </v-container>
 </template>
