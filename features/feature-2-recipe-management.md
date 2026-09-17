@@ -207,8 +207,9 @@ Two deviations exist in the running app and must be corrected by this feature so
 #### Scenario: Another user's recipes cannot be requested
 *   **Given** I am signed in as the user with id `1`
 *   **And** the user with id `2` owns a recipe
-*   **When** I request the recipe list for user id `2`
-*   **Then** no recipe belonging to user id `2` is returned
+*   **When** I send `GET /recipeapi/recipes/user/2`
+*   **Then** the API returns `404`
+*   **And** no recipe belonging to user id `2` is returned
 
 #### Scenario: A user with no recipes sees an empty page
 *   **Given** I am signed in and own no recipes
@@ -289,14 +290,167 @@ Two deviations exist in the running app and must be corrected by this feature so
 
 ---
 
-## Design sections — to be completed
+## Data Ownership & Isolation
 
-Per §2.2 step 6, the following are filled in after the requirements above are reviewed:
+Each user owns their recipes exclusively. Recipes are private to their owner in this feature; making a recipe visible to anyone else is Feature 6's publishing capability.
 
-- Data Ownership & Isolation *(sketched under Key Entities; expand as needed)*
-- API Requirements
-- Screen Requirements
-- Test Coverage Map
-- Agent implementation request
-- Definition of Done
-- Out of Scope
+| Rule | Requirement |
+|------|-------------|
+| **Read scope** | Recipe reads return only rows where `userId = req.user.id` |
+| **Write scope** | `PUT` / `DELETE` succeed only when the row matches both `id` and `req.user.id` |
+| **Create scope** | New recipes are owned by the authenticated user; a `userId` in the request body is ignored |
+| **Cross-user access** | Another user's recipe → `404` (never `403`, so existence is not disclosed) |
+| **UI scope** | The Recipes page renders only what the scoped API returned; it never filters unscoped data client-side |
+| **Implementation** | Put the ownership lookup in a shared helper under `backend/app/authorization/` — do not repeat the scope check in each controller method |
+
+See [security.mdc](../.cursor/rules/security.mdc) for the app-wide pattern.
+
+---
+
+## API Requirements
+
+Mount prefix is `/recipeapi/` (see [reference/api.md](./reference/api.md)).
+
+| Method | Endpoint | Auth | Purpose |
+|--------|----------|------|---------|
+| `POST` | `/recipeapi/recipes/` | Yes | Create a recipe owned by the signed-in user |
+| `GET` | `/recipeapi/recipes/user/:userId` | Yes | List the signed-in user's recipes, with nested steps and ingredients |
+| `GET` | `/recipeapi/recipes/:id` | Yes | Read one recipe the signed-in user owns |
+| `PUT` | `/recipeapi/recipes/:id` | Yes | Update a recipe the signed-in user owns |
+| `DELETE` | `/recipeapi/recipes/:id` | Yes | Delete a recipe the signed-in user owns |
+
+**Create request body** — `userId` is not accepted; the owner comes from the session:
+
+```json
+{ "name": "Chili", "description": "Weeknight chili", "servings": 4, "time": 45, "isPublished": false }
+```
+
+**Create success response** (`200`):
+
+```json
+{ "id": 7, "name": "Chili", "description": "Weeknight chili", "servings": 4, "time": 45, "isPublished": false, "userId": 1, "createdAt": "…", "updatedAt": "…" }
+```
+
+**Update success response** (`200`): `{ "message": "Recipe was updated successfully." }`
+**Delete success response** (`200`): `{ "message": "Recipe was deleted successfully!" }`
+**Error response:** `{ "message": "Human-readable explanation." }`
+**Validation failure:** `400` — for example `{ "message": "Name cannot be empty for recipe!" }`
+**Unauthenticated:** `401`
+**Missing or not owned:** `404` with `` { "message": `Cannot find Recipe with id=${id}.` } `` — never `403`
+
+### Changes to shipped behavior
+
+| Endpoint | Shipped now | Required by this spec | Authorized by |
+|---|---|---|---|
+| `POST /recipes/` | Takes `userId` from the request body | Takes the owner from the session | FR-004 |
+| `POST /recipes/` | Validates with a synchronous `throw`, so the `400` body is not JSON | Returns `400` with a JSON `{ message }` | FR-003 |
+| `GET /recipes/user/:userId` | Filters on the URL parameter, so any signed-in user can read another user's recipes | Returns `404` when `:userId` is not the session user | FR-007, FR-010 |
+| `GET /recipes/:id` | No auth and no ownership check | Requires a session and owner match | FR-010 |
+| `DELETE /recipes/:id` | No ownership check at all | Owner match required, else `404` | FR-010 |
+
+`GET /recipeapi/recipes/` (published recipes, unauthenticated) is untouched by this feature — see Out of Scope.
+
+**Convention note:** create returns `200`, matching the shipped controller, rather than the `201` in [api-conventions.mdc](../.cursor/rules/api-conventions.mdc). Change both this section and the US-2.1 scenarios together if the team wants `201`.
+
+---
+
+## Screen Requirements
+
+### [View: RecipeList] — route name `recipes`
+
+*   Heading: **Recipes**
+*   Primary action: **Add** (opens the Add Recipe dialog; primary labeled CTA per [ui-style-system.mdc](../.cursor/rules/ui-style-system.mdc))
+*   Shown only when signed in; a signed-out visitor sees the published list instead (Feature 6)
+*   One `RecipeCardComponent` per recipe, ordered by name ascending
+*   **Add Recipe dialog** — fields **Name**, **Number of Servings**, **Time to Make (in minutes)**, **Description**, and a **Publish?** switch reading `Publish? Yes` / `Publish? No`; actions **Close** and **Add Recipe**
+*   **Success feedback:** snackbar `"<name> added successfully!"`
+*   **Empty state:** `"No recipes yet. Add your first recipe."`
+*   **Loading / error:** error responses surface the API `message` in a snackbar; a failed load must not leave the page blank with no explanation
+
+### [Component: RecipeCardComponent]
+
+*   Shows the recipe name plus chips `"<servings> Servings"` and `"<time> minutes"`
+*   Clicking the card expands it to show **Ingredients** (quantity, unit, name, price per unit) and **Recipe Steps** (step number, instruction, attached ingredient chips), steps ordered by step number
+*   Expanded sections render empty rather than erroring when the recipe has no ingredients or steps
+*   Icon actions need accessible names: `aria-label` **Edit recipe** (`mdi-pencil`, routes to `editRecipe`). The PDF icon belongs to Feature 7.
+
+### [View: EditRecipe] — route name `editRecipe`, `props: true` on `/recipe/:id`
+
+*   Heading: **Edit Recipe**
+*   Recipe detail card with the same four fields as the Add dialog plus the **Publish?** switch
+*   Primary action: **Update Recipe**
+*   **Success feedback:** snackbar `"<name> updated successfully!"`
+*   **Not owned / missing:** the `404` from the API surfaces as an error message; the form does not silently render an empty recipe
+*   The Ingredients and Steps cards on this screen belong to [Feature 3](./feature-list.md) — this feature only owns the recipe detail card
+
+---
+
+## Test Coverage Map
+
+Each scenario in Acceptance Criteria maps to at least one automated test.
+
+| Story | Scenario | Test file | Test name |
+|-------|----------|-----------|-----------|
+| US-2.1 | User creates a recipe with all required details | `backend/tests/recipes.test.js` | `User creates a recipe with all required details` |
+| US-2.1 | New recipe defaults to unpublished | `backend/tests/recipes.test.js` | `New recipe defaults to unpublished` |
+| US-2.1 | Create is rejected when the name is missing | `backend/tests/recipes.test.js` | `Create is rejected when the name is missing` |
+| US-2.1 | Create is rejected when servings is not a positive number | `backend/tests/recipes.test.js` | `Create is rejected when servings is not a positive number` |
+| US-2.1 | Create is rejected without a session | `backend/tests/recipes.test.js` | `Create is rejected without a session` |
+| US-2.1 | Owner comes from the session, not the request body | `backend/tests/recipes.test.js` | `Owner comes from the session, not the request body` |
+| US-2.2 | Recipes page lists the signed-in user's recipes | `frontend/tests/RecipeList.test.js` | `Recipes page lists the signed-in user's recipes` |
+| US-2.2 | Recipes are listed in alphabetical order | `backend/tests/recipes.test.js` | `Recipes are listed in alphabetical order` |
+| US-2.2 | Another user's recipes cannot be requested | `backend/tests/recipes.test.js` | `Another user's recipes cannot be requested` |
+| US-2.2 | A user with no recipes sees an empty page | `frontend/tests/RecipeList.test.js` | `A user with no recipes sees an empty page` |
+| US-2.3 | Card shows the recipe summary | `frontend/tests/RecipeCardComponent.test.js` | `Card shows the recipe summary` |
+| US-2.3 | Expanding a card reveals ingredients and steps | `frontend/tests/RecipeCardComponent.test.js` | `Expanding a card reveals ingredients and steps` |
+| US-2.3 | Expanding a recipe with no ingredients or steps | `frontend/tests/RecipeCardComponent.test.js` | `Expanding a recipe with no ingredients or steps` |
+| US-2.4 | Owner updates a recipe's servings | `backend/tests/recipes.test.js` | `Owner updates a recipe's servings` |
+| US-2.4 | Update is rejected for another user's recipe | `backend/tests/recipes.test.js` | `Update is rejected for another user's recipe` |
+| US-2.4 | Update is rejected for a recipe that does not exist | `backend/tests/recipes.test.js` | `Update is rejected for a recipe that does not exist` |
+| US-2.4 | Update is rejected without a session | `backend/tests/recipes.test.js` | `Update is rejected without a session` |
+| US-2.5 | Owner deletes a recipe | `backend/tests/recipes.test.js` | `Owner deletes a recipe` |
+| US-2.5 | Deleting a recipe removes its steps and ingredients | `backend/tests/recipes.test.js` | `Deleting a recipe removes its steps and ingredients` |
+| US-2.5 | Delete is rejected for another user's recipe | `backend/tests/recipes.test.js` | `Delete is rejected for another user's recipe` |
+| US-2.5 | Delete is rejected without a session | `backend/tests/recipes.test.js` | `Delete is rejected without a session` |
+
+---
+
+## Agent implementation request
+
+Copy when asking Cursor to implement this feature (`@` this file):
+
+```text
+Implement Feature 2 from @features/feature-2-recipe-management.md on branch `feature/2-recipe-management`.
+
+Follow layer order in @features/framework.md (models → routes → backend tests → frontend → frontend tests).
+Map every Gherkin scenario in the Test Coverage Map; run `npm test` before finishing.
+If API routes, payloads, schema, or product rules changed per this spec, update @features/reference/api.md, @features/reference/data-model.md, and @features/reference/behavior.md in the same PR to match shipped code.
+Complete Definition of Done and the merge checklist in @features/framework.md.
+Do not implement behavior not in this spec.
+```
+
+**Reference updates for this feature:** `features/reference/api.md` (recipe endpoints and auth), `features/reference/data-model.md` (`recipes` ownership and cascade), `features/reference/behavior.md` (recipe ownership rules).
+
+---
+
+## Definition of Done
+
+*   [ ] Backend and frontend implemented per this spec (**FR-001** through **FR-013** satisfied)
+*   [ ] **Success Criteria SC-001 through SC-003** met
+*   [ ] All 21 mapped tests pass (`cd backend && npx jest tests/recipes.test.js`, `cd frontend && npx vitest run tests/RecipeList.test.js tests/RecipeCardComponent.test.js`)
+*   [ ] Test Coverage Map complete, with one `it` per scenario using the exact scenario title
+*   [ ] `features/reference/data-model.md` updated for the `recipes` ownership and cascade changes
+*   [ ] `features/reference/api.md` updated for the recipe endpoints and their auth requirements
+*   [ ] `features/reference/behavior.md` updated for the recipe ownership rules
+*   [ ] Catalog row present in [project README §2.3](../README.md#23-feature-catalog)
+
+---
+
+## Out of Scope
+
+*   Publishing, unpublishing, and the public published-recipe browsing screen, including `GET /recipeapi/recipes/` — a later publishing feature
+*   Measured ingredients and numbered steps inside a recipe ([Feature 3 — Recipe List Item Management](./feature-list.md))
+*   The shared ingredient list with units and prices ([Feature 4 — Ingredients Management](./feature-list.md))
+*   Exporting a recipe to PDF
+*   Recipe search, filtering, tags, and images
+*   `DELETE /recipeapi/recipes/` (delete-all) — not exposed in the UI and not needed by any story here
