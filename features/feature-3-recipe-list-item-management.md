@@ -535,7 +535,7 @@ Do not implement behavior not in this spec.
 
 *   [x] Backend and frontend implemented per this spec (**FR-001** through **FR-011** satisfied)
 *   [x] **Success Criteria SC-001 through SC-003** met
-*   [x] All 30 mapped tests pass (`cd backend && npx jest tests/recipeIngredients.test.js tests/recipeSteps.test.js`, `cd frontend && npx vitest run tests/EditRecipe.test.js`)
+*   [x] All 32 mapped tests pass (`cd backend && npx jest tests/recipeIngredients.test.js tests/recipeSteps.test.js`, `cd frontend && npx vitest run tests/EditRecipe.test.js`)
 *   [x] Test Coverage Map complete, with one `it` per scenario using the exact scenario title
 *   [x] `features/reference/data-model.md` updated for `recipeIngredients` and `recipeSteps`
 *   [x] `features/reference/api.md` updated for the recipe-ingredient and recipe-step endpoints
