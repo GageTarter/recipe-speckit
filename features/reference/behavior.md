@@ -44,9 +44,5 @@ They do **not** authorize new scope — implement only from `features/feature-*.
 |------|-------------|------------|
 | Deleting a recipe deletes its steps and measured ingredients | `ON DELETE CASCADE` on the recipe foreign keys in `backend/app/models/index.js` | Feature 2 |
 | Delete-all removes only the session user's recipes | `recipe.controller.js` `deleteAll` filters on `userId: req.user.id` | Feature 2 |
-
-## Known gaps
-
-| Gap | Where |
-|-----|-------|
-| There is no UI control for deleting a recipe, so US-2.5 is only exercised through the API | `frontend/src/views/RecipeList.vue` |
+| Deleting from the Recipes page requires a confirmation dialog that names the recipe | `RecipeCardComponent` emits `requestDelete`; `RecipeList.vue` owns the dialog, `DELETE` call, snackbar, and list refresh | Feature 2 |
+| Cancelling the delete dialog sends no request | `cancelDelete` clears `recipeToDelete` | Feature 2 |

@@ -18,6 +18,8 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits(["requestDelete"]);
+
 onMounted(async () => {
   await getRecipeIngredients();
   await getRecipeSteps();
@@ -80,7 +82,15 @@ function navigateToEdit() {
             v-if="user !== null"
             size="small"
             icon="mdi-pencil"
-            @click="navigateToEdit()"
+            aria-label="Edit recipe"
+            @click.stop="navigateToEdit()"
+          ></v-icon>
+          <v-icon
+            v-if="user !== null"
+            size="small"
+            icon="mdi-delete"
+            aria-label="Delete recipe"
+            @click.stop="emit('requestDelete', recipe)"
           ></v-icon>
         </v-col>
       </v-row>

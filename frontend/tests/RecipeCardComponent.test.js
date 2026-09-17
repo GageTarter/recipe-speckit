@@ -115,4 +115,18 @@ describe("Feature 2 — Recipe Management", () => {
       expect(details.findAll(".v-list-item")).toHaveLength(0);
     });
   });
+
+  describe("US-2.5 — Delete a recipe", () => {
+    it("The delete icon does not expand the card", async () => {
+      const wrapper = await mountCard();
+
+      expect(detailsRegion(wrapper).element.style.display).toBe("none");
+
+      await wrapper.find('[aria-label="Delete recipe"]').trigger("click");
+      await flushPromises();
+
+      expect(wrapper.emitted("requestDelete")).toEqual([[recipe]]);
+      expect(detailsRegion(wrapper).element.style.display).toBe("none");
+    });
+  });
 });

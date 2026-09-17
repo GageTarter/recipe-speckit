@@ -6,6 +6,7 @@ import RecipeServices from "../services/RecipeServices.js";
 
 const recipes = ref([]);
 const isAdd = ref(false);
+const recipeToDelete = ref(null);
 const user = ref(null);
 const snackbar = ref({
   value: false,
@@ -78,6 +79,32 @@ function closeAdd() {
   isAdd.value = false;
 }
 
+function confirmDelete(recipe) {
+  recipeToDelete.value = recipe;
+}
+
+function cancelDelete() {
+  recipeToDelete.value = null;
+}
+
+async function deleteRecipe() {
+  const recipe = recipeToDelete.value;
+  recipeToDelete.value = null;
+  await RecipeServices.deleteRecipe(recipe.id)
+    .then(() => {
+      snackbar.value.value = true;
+      snackbar.value.color = "green";
+      snackbar.value.text = `${recipe.name} deleted successfully!`;
+    })
+    .catch((error) => {
+      console.log(error);
+      snackbar.value.value = true;
+      snackbar.value.color = "error";
+      snackbar.value.text = error.response.data.message;
+    });
+  await getRecipes();
+}
+
 function closeSnackBar() {
   snackbar.value.value = false;
 }
@@ -103,7 +130,7 @@ function closeSnackBar() {
         v-for="recipe in recipes"
         :key="recipe.id"
         :recipe="recipe"
-        @deletedList="getRecipes()"
+        @requestDelete="confirmDelete"
       />
 
       <v-card v-if="recipes.length === 0" class="rounded-lg elevation-5 mb-8">
@@ -151,6 +178,24 @@ function closeSnackBar() {
             >
             <v-btn variant="flat" color="primary" @click="addRecipe()"
               >Add Recipe</v-btn
+            >
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+      <v-dialog persistent :model-value="recipeToDelete !== null" width="500">
+        <v-card class="rounded-lg elevation-5">
+          <v-card-title class="headline mb-2">Delete Recipe</v-card-title>
+          <v-card-text>
+            Delete "{{ recipeToDelete?.name }}"? This also deletes its
+            ingredients and steps.
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn variant="flat" color="secondary" @click="cancelDelete()"
+              >Cancel</v-btn
+            >
+            <v-btn variant="flat" color="primary" @click="deleteRecipe()"
+              >Delete</v-btn
             >
           </v-card-actions>
         </v-card>
