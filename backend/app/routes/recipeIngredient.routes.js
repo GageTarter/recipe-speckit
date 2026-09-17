@@ -16,6 +16,7 @@ module.exports = (app) => {
   // Retrieve all Recipe Ingredients for a Recipe
   router.get(
     "/recipes/:recipeId/recipeIngredients/",
+    [authenticateRoute],
     RecipeIngredient.findAllForRecipe
   );
 

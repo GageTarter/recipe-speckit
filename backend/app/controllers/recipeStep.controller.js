@@ -3,30 +3,52 @@ const RecipeStep = db.recipeStep;
 const RecipeIngredient = db.recipeIngredient;
 const Ingredient = db.ingredient;
 const Op = db.Sequelize.Op;
+const { getOwnedRecipeOrNull, getOwnedRecipeStepOrNull } = require("../authorization/recipeScope");
+
+const positiveIntOrNull = (value) => {
+  const number = Number(value);
+  if (!Number.isInteger(number) || number <= 0) {
+    return null;
+  }
+  return number;
+};
+
 // Create and Save a new RecipeStep
-exports.create = (req, res) => {
+exports.create = async (req, res) => {
   // Validate request
   if (req.body.stepNumber === undefined) {
-    const error = new Error("Step number cannot be empty for recipe step!");
-    error.statusCode = 400;
-    throw error;
+    return res.status(400).send({
+      message: "Step number cannot be empty for recipe step!",
+    });
   } else if (req.body.instruction === undefined) {
-    const error = new Error("Description cannot be empty for recipe step!");
-    error.statusCode = 400;
-    throw error;
+    return res.status(400).send({
+      message: "Description cannot be empty for recipe step!",
+    });
   } else if (req.body.recipeId === undefined) {
-    const error = new Error("Recipe ID cannot be empty for recipe step!");
-    error.statusCode = 400;
-    throw error;
+    return res.status(400).send({
+      message: "Recipe ID cannot be empty for recipe step!",
+    });
   }
 
-  // Create a RecipeStep
+  const stepNumber = positiveIntOrNull(req.body.stepNumber);
+  if (stepNumber === null) {
+    return res.status(400).send({
+      message: "Step number cannot be empty for recipe step!",
+    });
+  }
+
+  const recipe = await getOwnedRecipeOrNull(req, req.body.recipeId);
+  if (recipe === null) {
+    return res.status(404).send({
+      message: `Cannot find Recipe with id=${req.body.recipeId}.`,
+    });
+  }
+
   const recipeStep = {
-    stepNumber: req.body.stepNumber,
+    stepNumber: stepNumber,
     instruction: req.body.instruction,
-    recipeId: req.body.recipeId,
+    recipeId: recipe.id,
   };
-  // Save RecipeStep in the database
   RecipeStep.create(recipeStep)
     .then((data) => {
       res.send(data);
@@ -82,8 +104,13 @@ exports.findAllForRecipe = (req, res) => {
 };
 
 // Find all RecipeSteps for a recipe and include the ingredients
-exports.findAllForRecipeWithIngredients = (req, res) => {
+exports.findAllForRecipeWithIngredients = async (req, res) => {
   const recipeId = req.params.recipeId;
+  if ((await getOwnedRecipeOrNull(req, recipeId)) === null) {
+    return res.status(404).send({
+      message: `Cannot find Recipe with id=${recipeId}.`,
+    });
+  }
   RecipeStep.findAll({
     where: { recipeId: recipeId },
     include: [
@@ -134,10 +161,26 @@ exports.findOne = (req, res) => {
     });
 };
 // Update a RecipeStep by the id in the request
-exports.update = (req, res) => {
+// Update a RecipeStep by the id in the request
+exports.update = async (req, res) => {
   const id = req.params.id;
+  const existing = await getOwnedRecipeStepOrNull(req, id);
+  if (existing === null) {
+    return res.status(404).send({
+      message: `Cannot find RecipeStep with id=${id}.`,
+    });
+  }
+  if (req.body.stepNumber !== undefined) {
+    const stepNumber = positiveIntOrNull(req.body.stepNumber);
+    if (stepNumber === null) {
+      return res.status(400).send({
+        message: "Step number cannot be empty for recipe step!",
+      });
+    }
+    req.body.stepNumber = stepNumber;
+  }
   RecipeStep.update(req.body, {
-    where: { id: id },
+    where: { id: existing.id },
   })
     .then((number) => {
       if (number == 1) {
@@ -157,10 +200,16 @@ exports.update = (req, res) => {
     });
 };
 // Delete a RecipeStep with the specified id in the request
-exports.delete = (req, res) => {
+exports.delete = async (req, res) => {
   const id = req.params.id;
+  const existing = await getOwnedRecipeStepOrNull(req, id);
+  if (existing === null) {
+    return res.status(404).send({
+      message: `Cannot find RecipeStep with id=${id}.`,
+    });
+  }
   RecipeStep.destroy({
-    where: { id: id },
+    where: { id: existing.id },
   })
     .then((number) => {
       if (number == 1) {
