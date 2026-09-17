@@ -44,6 +44,13 @@ exports.create = async (req, res) => {
       });
     }
 
+    const catalogItem = await Ingredient.findByPk(req.body.ingredientId);
+    if (catalogItem === null) {
+      return res.status(404).send({
+        message: `Cannot find Ingredient with id=${req.body.ingredientId}.`,
+      });
+    }
+
     const recipeIngredient = {
       quantity: quantity,
       recipeId: recipe.id,

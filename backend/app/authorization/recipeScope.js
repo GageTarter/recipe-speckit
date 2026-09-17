@@ -5,8 +5,8 @@ const RecipeStep = db.recipeStep;
 
 /**
  * Loads a recipe only when it belongs to the authenticated user.
- * Returns null for a missing id or another user's recipe so callers
- * answer 404 without disclosing that the row exists.
+ * Returns null for a missing id, a malformed id, or another user's recipe so
+ * callers answer 404 without disclosing that the row exists.
  */
 const getOwnedRecipeOrNull = async (req, id) => {
   const recipeId = parseInt(id, 10);

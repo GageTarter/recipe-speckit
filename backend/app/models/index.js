@@ -38,28 +38,26 @@ db.session.belongsTo(
 );
 
 // foreign key for recipe
-db.user.hasMany(
-  db.recipe,
-  { as: "recipe" },
-  { foreignKey: { allowNull: false }, onDelete: "CASCADE" }
-);
-db.recipe.belongsTo(
-  db.user,
-  { as: "user" },
-  { foreignKey: { allowNull: true }, onDelete: "CASCADE" }
-);
+db.user.hasMany(db.recipe, {
+  as: "recipe",
+  foreignKey: { name: "userId", allowNull: false },
+  onDelete: "CASCADE",
+});
+db.recipe.belongsTo(db.user, {
+  as: "user",
+  foreignKey: { name: "userId", allowNull: false },
+});
 
 // foreign key for recipeStep
-db.recipe.hasMany(
-  db.recipeStep,
-  { as: "recipeStep" },
-  { foreignKey: { allowNull: false }, onDelete: "CASCADE" }
-);
-db.recipeStep.belongsTo(
-  db.recipe,
-  { as: "recipe" },
-  { foreignKey: { allowNull: false }, onDelete: "CASCADE" }
-);
+db.recipe.hasMany(db.recipeStep, {
+  as: "recipeStep",
+  foreignKey: { name: "recipeId", allowNull: false },
+  onDelete: "CASCADE",
+});
+db.recipeStep.belongsTo(db.recipe, {
+  as: "recipe",
+  foreignKey: { name: "recipeId", allowNull: false },
+});
 
 // foreign keys for recipeIngredient
 db.recipeStep.hasMany(
@@ -67,11 +65,11 @@ db.recipeStep.hasMany(
   { as: "recipeIngredient" },
   { foreignKey: { allowNull: false }, onDelete: "CASCADE" }
 );
-db.recipe.hasMany(
-  db.recipeIngredient,
-  { as: "recipeIngredient" },
-  { foreignKey: { allowNull: false }, onDelete: "CASCADE" }
-);
+db.recipe.hasMany(db.recipeIngredient, {
+  as: "recipeIngredient",
+  foreignKey: { name: "recipeId", allowNull: false },
+  onDelete: "CASCADE",
+});
 db.ingredient.hasMany(
   db.recipeIngredient,
   { as: "recipeIngredient" },
@@ -82,11 +80,10 @@ db.recipeIngredient.belongsTo(
   { as: "recipeStep" },
   { foreignKey: { allowNull: true }, onDelete: "CASCADE" }
 );
-db.recipeIngredient.belongsTo(
-  db.recipe,
-  { as: "recipe" },
-  { foreignKey: { allowNull: false }, onDelete: "CASCADE" }
-);
+db.recipeIngredient.belongsTo(db.recipe, {
+  as: "recipe",
+  foreignKey: { name: "recipeId", allowNull: false },
+});
 db.recipeIngredient.belongsTo(
   db.ingredient,
   { as: "ingredient" },

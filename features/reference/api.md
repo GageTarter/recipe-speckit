@@ -2,7 +2,60 @@
 
 **Living snapshot** of routes on `dev`. Update this file when endpoints change.
 
-All recipe-item routes are mounted at `/recipeapi`.
+All recipe routes are mounted at `/recipeapi`.
+
+## Recipes
+
+| Method | Path | Auth | Purpose |
+|--------|------|------|---------|
+| POST | `/recipeapi/recipes/` | Yes | Create a recipe owned by the session user |
+| GET | `/recipeapi/recipes/user/:userId` | Yes | List the session user's recipes, A→Z |
+| GET | `/recipeapi/recipes/:id` | Yes | Read one of the session user's recipes |
+| PUT | `/recipeapi/recipes/:id` | Yes | Update one of the session user's recipes |
+| DELETE | `/recipeapi/recipes/:id` | Yes | Delete one of the session user's recipes |
+| DELETE | `/recipeapi/recipes/` | Yes | Delete all of the session user's recipes |
+
+### POST `/recipeapi/recipes/`
+
+Request:
+
+```json
+{ "name": "Chili", "description": "Weeknight chili", "servings": 4, "time": 45 }
+```
+
+`isPublished` is optional and defaults to `false`. Any `userId` in the body is
+ignored — the owner is always taken from the session.
+
+Responds `200` with the created recipe (not `201`). `400` when `name`,
+`description`, `servings`, or `time` is missing, or when `servings` / `time` is
+not a positive integer.
+
+### GET `/recipeapi/recipes/user/:userId`
+
+Responds `200` with an array of recipes sorted by `name` ASC. Responds `404`
+when `:userId` is not the session user.
+
+### GET `/recipeapi/recipes/:id`
+
+Responds `200` with a **single-element array** (`[recipe]`). Responds `404` when
+the recipe does not exist or belongs to another user.
+
+### PUT `/recipeapi/recipes/:id`
+
+Accepts any of `name`, `description`, `servings`, `time`, `isPublished`. Other
+fields — including `userId` — are ignored.
+
+Responds `200` with `{ "message": "Recipe was updated successfully." }`.
+
+### DELETE `/recipeapi/recipes/:id`
+
+Responds `200` with `{ "message": "Recipe was deleted successfully!" }`. Deleting
+a recipe also deletes its steps and measured ingredients.
+
+### DELETE `/recipeapi/recipes/`
+
+Deletes every recipe owned by the session user. Other users' recipes are
+untouched. No screen calls this route.
 
 ## Recipe ingredients
 
@@ -19,7 +72,9 @@ Create request:
 { "quantity": 2, "recipeId": 7, "ingredientId": 3 }
 ```
 
-`recipeStepId` is optional. Create responds `200` with the stored row. Missing `quantity` returns `400` with `"Quantity cannot be empty for recipe ingredient!"`. A recipe that is missing or owned by someone else returns `404`.
+`recipeStepId` is optional. Create responds `200`. Missing `quantity` returns
+`400` with `"Quantity cannot be empty for recipe ingredient!"`. A recipe that is
+missing or owned by someone else returns `404`.
 
 ## Recipe steps
 
@@ -36,21 +91,30 @@ Create request:
 { "stepNumber": 1, "instruction": "Simmer the beans", "recipeId": 7 }
 ```
 
-Create responds `200`. Missing `instruction` returns `400` with `"Description cannot be empty for recipe step!"`.
+Create responds `200`. Missing `instruction` returns `400` with
+`"Description cannot be empty for recipe step!"`.
 
 ## Conventions
 
 - Flat JSON responses (no `{ success, data }` envelope).
 - Errors: `{ "message": "..." }`.
-- Authenticated routes: `Authorization: Bearer <token>`; missing or expired tokens get `401`.
+- Authenticated routes: `Authorization: Bearer <token>`; missing or expired
+  tokens get `401`.
 - Another user's recipe or its items answers `404`, never `403`.
 
-## Shipped but not covered by this feature
+## Shipped but not covered by a feature spec
 
-Unscoped list-all and delete-all routes for ingredients and steps still exist on the routers. Auth, users, recipes, and the shared ingredient catalog belong to other features.
+| Method | Path | Auth | Note |
+|--------|------|------|------|
+| GET | `/recipeapi/recipes/` | No | Lists all recipes where `isPublished` is true |
+
+Unscoped list-all and delete-all routes for ingredients and steps still exist
+on the routers. Auth, users, and the shared ingredient catalog belong to other
+features.
 
 ## Provenance
 
 | Area | Introduced in |
 |------|---------------|
+| Recipe create / list / read / update / delete | Feature 2 — Recipe Management |
 | Recipe ingredient and step CRUD on a recipe | Feature 3 — Recipe List Item Management |
