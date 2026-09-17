@@ -107,6 +107,22 @@ describe("Feature 3 — Recipe List Item Management", () => {
       expect(await RecipeStep.count()).toBe(0);
     });
 
+    it("Create is rejected when step number is not a positive number", async () => {
+      const recipe = await createRecipeFor(owner.id);
+
+      const response = await request(app)
+        .post(`/recipeapi/recipes/${recipe.id}/recipeSteps/`)
+        .set("Authorization", `Bearer ${ownerToken}`)
+        .send({
+          stepNumber: 0,
+          instruction: "Simmer the beans",
+          recipeId: recipe.id,
+        });
+
+      expect(response.status).toBe(400);
+      expect(await RecipeStep.count()).toBe(0);
+    });
+
     it("Create is rejected without a session", async () => {
       const recipe = await createRecipeFor(owner.id);
 
@@ -162,6 +178,21 @@ describe("Feature 3 — Recipe List Item Management", () => {
 
       expect(response.status).toBe(200);
       expect(response.body.map((step) => step.stepNumber)).toEqual([1, 2, 3]);
+    });
+
+    it("Listing another user's steps is rejected", async () => {
+      const recipe = await createRecipeFor(otherUser.id);
+      await RecipeStep.create({
+        stepNumber: 1,
+        instruction: "Simmer the beans",
+        recipeId: recipe.id,
+      });
+
+      const response = await request(app)
+        .get(`/recipeapi/recipes/${recipe.id}/recipeStepsWithIngredients/`)
+        .set("Authorization", `Bearer ${ownerToken}`);
+
+      expect(response.status).toBe(404);
     });
   });
 

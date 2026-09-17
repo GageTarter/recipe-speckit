@@ -215,6 +215,24 @@ Two deviations exist in the running app and must be corrected by this feature so
 *   **Then** the API returns `404`
 *   **And** no recipe belonging to user id `2` is returned
 
+#### Scenario: Owner reads their own recipe
+*   **Given** I am signed in and I own a recipe `Chili`
+*   **When** I send `GET /recipeapi/recipes/:id` for `Chili`
+*   **Then** the API returns `200` with a single-element array whose name is `Chili`
+
+#### Scenario: Reading another user's recipe is rejected
+*   **Given** I am signed in as the user with id `1`
+*   **And** the user with id `2` owns a recipe named `Gumbo`
+*   **When** I send `GET /recipeapi/recipes/:id` for `Gumbo`
+*   **Then** the API returns `404`
+*   **And** the body does not include `Gumbo`
+
+#### Scenario: Reading a recipe without a session is rejected
+*   **Given** I am not signed in
+*   **And** a recipe exists
+*   **When** I send `GET /recipeapi/recipes/:id` for that recipe
+*   **Then** the API returns `401`
+
 #### Scenario: A user with no recipes sees an empty page
 *   **Given** I am signed in and own no recipes
 *   **When** I open the Recipes page
@@ -291,6 +309,13 @@ Two deviations exist in the running app and must be corrected by this feature so
 *   **When** I send `DELETE /recipeapi/recipes/1`
 *   **Then** the API returns `401`
 *   **And** recipe `1` still exists
+
+#### Scenario: Delete all leaves other users' recipes untouched
+*   **Given** I am signed in and I own two recipes
+*   **And** another user owns a recipe `Gumbo`
+*   **When** I send `DELETE /recipeapi/recipes/`
+*   **Then** my recipes are gone
+*   **And** `Gumbo` still exists
 
 #### Scenario: Deleting a recipe asks for confirmation first
 *   **Given** I am on the Recipes page and I own a recipe `Chili`
@@ -433,6 +458,9 @@ Each scenario in Acceptance Criteria maps to at least one automated test.
 | US-2.2 | Recipes page lists the signed-in user's recipes | `frontend/tests/RecipeList.test.js` | `Recipes page lists the signed-in user's recipes` |
 | US-2.2 | Recipes are listed in alphabetical order | `backend/tests/recipes.test.js` | `Recipes are listed in alphabetical order` |
 | US-2.2 | Another user's recipes cannot be requested | `backend/tests/recipes.test.js` | `Another user's recipes cannot be requested` |
+| US-2.2 | Owner reads their own recipe | `backend/tests/recipes.test.js` | `Owner reads their own recipe` |
+| US-2.2 | Reading another user's recipe is rejected | `backend/tests/recipes.test.js` | `Reading another user's recipe is rejected` |
+| US-2.2 | Reading a recipe without a session is rejected | `backend/tests/recipes.test.js` | `Reading a recipe without a session is rejected` |
 | US-2.2 | A user with no recipes sees an empty page | `frontend/tests/RecipeList.test.js` | `A user with no recipes sees an empty page` |
 | US-2.3 | Card shows the recipe summary | `frontend/tests/RecipeCardComponent.test.js` | `Card shows the recipe summary` |
 | US-2.3 | Expanding a card reveals ingredients and steps | `frontend/tests/RecipeCardComponent.test.js` | `Expanding a card reveals ingredients and steps` |
@@ -445,17 +473,11 @@ Each scenario in Acceptance Criteria maps to at least one automated test.
 | US-2.5 | Deleting a recipe removes its steps and ingredients | `backend/tests/recipes.test.js` | `Deleting a recipe removes its steps and ingredients` |
 | US-2.5 | Delete is rejected for another user's recipe | `backend/tests/recipes.test.js` | `Delete is rejected for another user's recipe` |
 | US-2.5 | Delete is rejected without a session | `backend/tests/recipes.test.js` | `Delete is rejected without a session` |
+| US-2.5 | Delete all leaves other users' recipes untouched | `backend/tests/recipes.test.js` | `Delete all leaves other users' recipes untouched` |
 | US-2.5 | Deleting a recipe asks for confirmation first | `frontend/tests/RecipeList.test.js` | `Deleting a recipe asks for confirmation first` |
 | US-2.5 | Confirming the dialog removes the recipe from the page | `frontend/tests/RecipeList.test.js` | `Confirming the dialog removes the recipe from the page` |
 | US-2.5 | Cancelling the dialog keeps the recipe | `frontend/tests/RecipeList.test.js` | `Cancelling the dialog keeps the recipe` |
 | US-2.5 | The delete icon does not expand the card | `frontend/tests/RecipeCardComponent.test.js` | `The delete icon does not expand the card` |
-
-No Gherkin scenario exercises `GET /recipeapi/recipes/:id` directly, so
-`backend/tests/recipes.test.js` adds three tests beyond the map — `Owner reads
-their own recipe`, `Reading another user's recipe is rejected`, and `Reading a
-recipe without a session is rejected` — to hold **FR-007** and **SC-003**. A
-fourth, `Delete all leaves other users' recipes untouched`, holds **SC-003** for
-the delete-all route.
 
 ---
 
@@ -481,7 +503,7 @@ Do not implement behavior not in this spec.
 
 *   [x] Backend and frontend implemented per this spec (**FR-001** through **FR-014** satisfied)
 *   [x] **Success Criteria SC-001 through SC-004** met
-*   [x] All 25 mapped tests pass (`cd backend && npx jest tests/recipes.test.js`, `cd frontend && npx vitest run tests/RecipeList.test.js tests/RecipeCardComponent.test.js`)
+*   [x] All 29 mapped tests pass (`cd backend && npx jest tests/recipes.test.js`, `cd frontend && npx vitest run tests/RecipeList.test.js tests/RecipeCardComponent.test.js`)
 *   [x] Test Coverage Map complete, with one `it` per scenario using the exact scenario title
 *   [x] `features/reference/data-model.md` updated for the `recipes` ownership and cascade changes
 *   [x] `features/reference/api.md` updated for the recipe endpoints and their auth requirements

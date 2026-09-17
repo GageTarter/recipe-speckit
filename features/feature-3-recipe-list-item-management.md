@@ -186,6 +186,18 @@ No new tables. This feature uses the shipped `recipeIngredients` and `recipeStep
 *   **Then** the API returns `400` with `"Quantity cannot be empty for recipe ingredient!"`
 *   **And** no recipe ingredient is stored
 
+#### Scenario: Create is rejected when quantity is not a positive number
+*   **Given** I am signed in and I own a recipe
+*   **When** I send `POST /recipeapi/recipes/:recipeId/recipeIngredients/` with `quantity` set to `0`
+*   **Then** the API returns `400`
+*   **And** no recipe ingredient is stored
+
+#### Scenario: Create is rejected when the ingredient does not exist
+*   **Given** I am signed in and I own a recipe
+*   **When** I add a recipe ingredient with an `ingredientId` that is not in the catalog
+*   **Then** the API returns `404`
+*   **And** no recipe ingredient is stored
+
 #### Scenario: Create is rejected without a session
 *   **Given** I am not signed in
 *   **When** I send `POST /recipeapi/recipes/:recipeId/recipeIngredients/` with a complete body
@@ -199,10 +211,22 @@ No new tables. This feature uses the shipped `recipeIngredients` and `recipeStep
 *   **Then** the API returns `404`
 *   **And** no recipe ingredient is stored for that recipe
 
+#### Scenario: Listing another user's recipe ingredients is rejected
+*   **Given** I am signed in as the user with id `1`
+*   **And** the user with id `2` owns a recipe with a measured ingredient
+*   **When** I send `GET /recipeapi/recipes/:recipeId/recipeIngredients/` for that recipe
+*   **Then** the API returns `404`
+
 #### Scenario: Edit Recipe lists the recipe's ingredients
 *   **Given** I am on Edit Recipe for `Chili` and it has `2` cups of `Beans`
 *   **When** the page loads
 *   **Then** the Ingredients card shows `2 cups of Beans`
+
+#### Scenario: User adds a measured ingredient from Edit Recipe
+*   **Given** I am on Edit Recipe for `Chili`
+*   **When** I add quantity `2` of `Beans` from the Add Ingredient dialog
+*   **Then** `addRecipeIngredient` is called
+*   **And** the Ingredients card shows `Beans`
 
 ### US-3.2 — Adjust a recipe's ingredient
 
@@ -232,6 +256,12 @@ No new tables. This feature uses the shipped `recipeIngredients` and `recipeStep
 *   **Then** the API returns `200` with `{ "message": "RecipeIngredient was deleted successfully!" }`
 *   **And** `Beans` no longer appears in `Chili`'s ingredient list
 
+#### Scenario: Owner removes a recipe ingredient from Edit Recipe
+*   **Given** I am on Edit Recipe for `Chili` and it lists `Beans`
+*   **When** I click the delete icon on that ingredient
+*   **Then** `deleteRecipeIngredient` is called
+*   **And** `Beans` no longer appears in the Ingredients card
+
 #### Scenario: Delete is rejected for another user's recipe ingredient
 *   **Given** I am signed in as the user with id `1`
 *   **And** the user with id `2` owns a recipe ingredient with id `9`
@@ -253,6 +283,12 @@ No new tables. This feature uses the shipped `recipeIngredients` and `recipeStep
 *   **Then** the API returns `400` with `"Description cannot be empty for recipe step!"`
 *   **And** no recipe step is stored
 
+#### Scenario: Create is rejected when step number is not a positive number
+*   **Given** I am signed in and I own a recipe
+*   **When** I send `POST /recipeapi/recipes/:recipeId/recipeSteps/` with `stepNumber` set to `0`
+*   **Then** the API returns `400`
+*   **And** no recipe step is stored
+
 #### Scenario: Create is rejected without a session
 *   **Given** I am not signed in
 *   **When** I send `POST /recipeapi/recipes/:recipeId/recipeSteps/` with a complete body
@@ -271,10 +307,22 @@ No new tables. This feature uses the shipped `recipeIngredients` and `recipeStep
 *   **When** I request `Chili`'s steps
 *   **Then** they appear in the order `1`, `2`, `3`
 
+#### Scenario: Listing another user's steps is rejected
+*   **Given** I am signed in as the user with id `1`
+*   **And** the user with id `2` owns a recipe with a step
+*   **When** I send `GET /recipeapi/recipes/:recipeId/recipeStepsWithIngredients/` for that recipe
+*   **Then** the API returns `404`
+
 #### Scenario: Edit Recipe lists the recipe's steps
 *   **Given** I am on Edit Recipe for `Chili` and it has step `1` `Simmer the beans`
 *   **When** the page loads
 *   **Then** the Steps card shows `1` and `Simmer the beans`
+
+#### Scenario: Owner adds a numbered step from Edit Recipe
+*   **Given** I am on Edit Recipe for `Chili`
+*   **When** I add step number `1` with instruction `Simmer the beans` from the Add Step dialog
+*   **Then** `addRecipeStep` is called
+*   **And** the Steps card shows `Simmer the beans`
 
 ### US-3.5 — Attach ingredients to a step
 
@@ -317,6 +365,12 @@ No new tables. This feature uses the shipped `recipeIngredients` and `recipeStep
 *   **When** I delete that step
 *   **Then** the API returns `200` with `{ "message": "RecipeStep was deleted successfully!" }`
 *   **And** that step no longer appears in `Chili`'s step table
+
+#### Scenario: Owner deletes a step from Edit Recipe
+*   **Given** I am on Edit Recipe for `Chili` and it lists step `Simmer the beans`
+*   **When** I click the delete icon on that step
+*   **Then** `deleteRecipeStep` is called
+*   **And** `Simmer the beans` no longer appears in the Steps card
 
 #### Scenario: Delete is rejected without a session
 *   **Given** I am not signed in
@@ -426,26 +480,35 @@ Each scenario in Acceptance Criteria maps to at least one automated test.
 |-------|----------|-----------|-----------|
 | US-3.1 | User adds a measured ingredient to a recipe | `backend/tests/recipeIngredients.test.js` | `User adds a measured ingredient to a recipe` |
 | US-3.1 | Create is rejected when quantity is missing | `backend/tests/recipeIngredients.test.js` | `Create is rejected when quantity is missing` |
+| US-3.1 | Create is rejected when quantity is not a positive number | `backend/tests/recipeIngredients.test.js` | `Create is rejected when quantity is not a positive number` |
+| US-3.1 | Create is rejected when the ingredient does not exist | `backend/tests/recipeIngredients.test.js` | `Create is rejected when the ingredient does not exist` |
 | US-3.1 | Create is rejected without a session | `backend/tests/recipeIngredients.test.js` | `Create is rejected without a session` |
 | US-3.1 | Create is rejected for another user's recipe | `backend/tests/recipeIngredients.test.js` | `Create is rejected for another user's recipe` |
+| US-3.1 | Listing another user's recipe ingredients is rejected | `backend/tests/recipeIngredients.test.js` | `Listing another user's recipe ingredients is rejected` |
 | US-3.1 | Edit Recipe lists the recipe's ingredients | `frontend/tests/EditRecipe.test.js` | `Edit Recipe lists the recipe's ingredients` |
+| US-3.1 | User adds a measured ingredient from Edit Recipe | `frontend/tests/EditRecipe.test.js` | `User adds a measured ingredient from Edit Recipe` |
 | US-3.2 | Owner updates a recipe ingredient's quantity | `backend/tests/recipeIngredients.test.js` | `Owner updates a recipe ingredient's quantity` |
 | US-3.2 | Update is rejected for another user's recipe ingredient | `backend/tests/recipeIngredients.test.js` | `Update is rejected for another user's recipe ingredient` |
 | US-3.2 | Update is rejected without a session | `backend/tests/recipeIngredients.test.js` | `Update is rejected without a session` |
 | US-3.3 | Owner removes a recipe ingredient | `backend/tests/recipeIngredients.test.js` | `Owner removes a recipe ingredient` |
+| US-3.3 | Owner removes a recipe ingredient from Edit Recipe | `frontend/tests/EditRecipe.test.js` | `Owner removes a recipe ingredient from Edit Recipe` |
 | US-3.3 | Delete is rejected for another user's recipe ingredient | `backend/tests/recipeIngredients.test.js` | `Delete is rejected for another user's recipe ingredient` |
 | US-3.4 | Owner adds a numbered step | `backend/tests/recipeSteps.test.js` | `Owner adds a numbered step` |
 | US-3.4 | Create is rejected when instruction is missing | `backend/tests/recipeSteps.test.js` | `Create is rejected when instruction is missing` |
+| US-3.4 | Create is rejected when step number is not a positive number | `backend/tests/recipeSteps.test.js` | `Create is rejected when step number is not a positive number` |
 | US-3.4 | Create is rejected without a session | `backend/tests/recipeSteps.test.js` | `Create is rejected without a session` |
 | US-3.4 | Create is rejected for another user's recipe | `backend/tests/recipeSteps.test.js` | `Create is rejected for another user's recipe` |
 | US-3.4 | Steps are listed in step-number order | `backend/tests/recipeSteps.test.js` | `Steps are listed in step-number order` |
+| US-3.4 | Listing another user's steps is rejected | `backend/tests/recipeSteps.test.js` | `Listing another user's steps is rejected` |
 | US-3.4 | Edit Recipe lists the recipe's steps | `frontend/tests/EditRecipe.test.js` | `Edit Recipe lists the recipe's steps` |
+| US-3.4 | Owner adds a numbered step from Edit Recipe | `frontend/tests/EditRecipe.test.js` | `Owner adds a numbered step from Edit Recipe` |
 | US-3.5 | Owner attaches ingredients to a step | `backend/tests/recipeSteps.test.js` | `Owner attaches ingredients to a step` |
 | US-3.5 | A step with no attached ingredients | `backend/tests/recipeSteps.test.js` | `A step with no attached ingredients` |
 | US-3.5 | Attached ingredients appear on the step's row | `frontend/tests/EditRecipe.test.js` | `Attached ingredients appear on the step's row` |
 | US-3.6 | Owner updates a step's instruction | `backend/tests/recipeSteps.test.js` | `Owner updates a step's instruction` |
 | US-3.6 | Update is rejected for another user's step | `backend/tests/recipeSteps.test.js` | `Update is rejected for another user's step` |
 | US-3.7 | Owner deletes a step | `backend/tests/recipeSteps.test.js` | `Owner deletes a step` |
+| US-3.7 | Owner deletes a step from Edit Recipe | `frontend/tests/EditRecipe.test.js` | `Owner deletes a step from Edit Recipe` |
 | US-3.7 | Delete is rejected without a session | `backend/tests/recipeSteps.test.js` | `Delete is rejected without a session` |
 
 ---
@@ -472,7 +535,7 @@ Do not implement behavior not in this spec.
 
 *   [x] Backend and frontend implemented per this spec (**FR-001** through **FR-011** satisfied)
 *   [x] **Success Criteria SC-001 through SC-003** met
-*   [x] All 23 mapped tests pass (`cd backend && npx jest tests/recipeIngredients.test.js tests/recipeSteps.test.js`, `cd frontend && npx vitest run tests/EditRecipe.test.js`)
+*   [x] All 30 mapped tests pass (`cd backend && npx jest tests/recipeIngredients.test.js tests/recipeSteps.test.js`, `cd frontend && npx vitest run tests/EditRecipe.test.js`)
 *   [x] Test Coverage Map complete, with one `it` per scenario using the exact scenario title
 *   [x] `features/reference/data-model.md` updated for `recipeIngredients` and `recipeSteps`
 *   [x] `features/reference/api.md` updated for the recipe-ingredient and recipe-step endpoints

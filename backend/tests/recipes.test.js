@@ -171,11 +171,7 @@ describe("Feature 2 — Recipe Management", () => {
       expect(response.status).toBe(404);
       expect(JSON.stringify(response.body)).not.toContain("Gumbo");
     });
-  });
 
-  // No Gherkin scenario covers the read-one route directly; these guard
-  // FR-007 and SC-003.
-  describe("FR-007 — Reading one recipe is owner-scoped", () => {
     it("Owner reads their own recipe", async () => {
       const recipe = await createRecipeFor(owner.id);
 
@@ -334,10 +330,7 @@ describe("Feature 2 — Recipe Management", () => {
       expect(response.status).toBe(401);
       expect(await Recipe.findByPk(recipe.id)).not.toBeNull();
     });
-  });
 
-  // Not in the Test Coverage Map; holds SC-003 for the delete-all route
-  describe("SC-003 — Deleting all recipes is owner-scoped", () => {
     it("Delete all leaves other users' recipes untouched", async () => {
       await createRecipeFor(owner.id, { name: "Chili" });
       await createRecipeFor(owner.id, { name: "Waffles" });

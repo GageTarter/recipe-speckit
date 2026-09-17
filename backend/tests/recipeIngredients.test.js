@@ -107,6 +107,38 @@ describe("Feature 3 — Recipe List Item Management", () => {
       expect(await RecipeIngredient.count()).toBe(0);
     });
 
+    it("Create is rejected when quantity is not a positive number", async () => {
+      const recipe = await createRecipeFor(owner.id);
+
+      const response = await request(app)
+        .post(`/recipeapi/recipes/${recipe.id}/recipeIngredients/`)
+        .set("Authorization", `Bearer ${ownerToken}`)
+        .send({
+          quantity: 0,
+          recipeId: recipe.id,
+          ingredientId: beans.id,
+        });
+
+      expect(response.status).toBe(400);
+      expect(await RecipeIngredient.count()).toBe(0);
+    });
+
+    it("Create is rejected when the ingredient does not exist", async () => {
+      const recipe = await createRecipeFor(owner.id);
+
+      const response = await request(app)
+        .post(`/recipeapi/recipes/${recipe.id}/recipeIngredients/`)
+        .set("Authorization", `Bearer ${ownerToken}`)
+        .send({
+          quantity: 2,
+          recipeId: recipe.id,
+          ingredientId: 9999,
+        });
+
+      expect(response.status).toBe(404);
+      expect(await RecipeIngredient.count()).toBe(0);
+    });
+
     it("Create is rejected without a session", async () => {
       const recipe = await createRecipeFor(owner.id);
 
@@ -136,6 +168,21 @@ describe("Feature 3 — Recipe List Item Management", () => {
 
       expect(response.status).toBe(404);
       expect(await RecipeIngredient.count()).toBe(0);
+    });
+
+    it("Listing another user's recipe ingredients is rejected", async () => {
+      const recipe = await createRecipeFor(otherUser.id);
+      await RecipeIngredient.create({
+        quantity: 2,
+        recipeId: recipe.id,
+        ingredientId: beans.id,
+      });
+
+      const response = await request(app)
+        .get(`/recipeapi/recipes/${recipe.id}/recipeIngredients/`)
+        .set("Authorization", `Bearer ${ownerToken}`);
+
+      expect(response.status).toBe(404);
     });
   });
 

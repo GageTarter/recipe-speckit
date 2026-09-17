@@ -382,12 +382,14 @@ function closeSnackBar() {
                       class="mx-2"
                       size="x-small"
                       icon="mdi-pencil"
+                      aria-label="Edit ingredient"
                       @click="openEditIngredient(recipeIngredient)"
                     ></v-icon>
                     <v-icon
                       class="mx-2"
                       size="x-small"
                       icon="mdi-trash-can"
+                      aria-label="Delete ingredient"
                       @click="deleteIngredient(recipeIngredient)"
                     ></v-icon>
                   </v-row>
@@ -430,6 +432,7 @@ function closeSnackBar() {
                     <v-icon
                       size="x-small"
                       icon="mdi-pencil"
+                      aria-label="Edit step"
                       @click="openEditStep(step)"
                     ></v-icon>
                   </td>
@@ -437,6 +440,7 @@ function closeSnackBar() {
                     <v-icon
                       size="x-small"
                       icon="mdi-trash-can"
+                      aria-label="Delete step"
                       @click="deleteStep(step)"
                     >
                     </v-icon>
