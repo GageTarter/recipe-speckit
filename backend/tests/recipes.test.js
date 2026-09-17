@@ -335,4 +335,21 @@ describe("Feature 2 — Recipe Management", () => {
       expect(await Recipe.findByPk(recipe.id)).not.toBeNull();
     });
   });
+
+  // Not in the Test Coverage Map; holds SC-003 for the delete-all route
+  describe("SC-003 — Deleting all recipes is owner-scoped", () => {
+    it("Delete all leaves other users' recipes untouched", async () => {
+      await createRecipeFor(owner.id, { name: "Chili" });
+      await createRecipeFor(owner.id, { name: "Waffles" });
+      const theirs = await createRecipeFor(otherUser.id, { name: "Gumbo" });
+
+      const response = await request(app)
+        .delete("/recipeapi/recipes/")
+        .set("Authorization", `Bearer ${ownerToken}`);
+
+      expect(response.status).toBe(200);
+      expect(await Recipe.count({ where: { userId: owner.id } })).toBe(0);
+      expect(await Recipe.findByPk(theirs.id)).not.toBeNull();
+    });
+  });
 });

@@ -2,7 +2,7 @@
 
 **Feature ID:** 2
 **Branch pattern:** `feature/2-recipe-management`
-**Status:** Draft
+**Status:** Ready
 **Created:** 2026-09-16
 **Input:** Let a signed-in cook record, review, revise, and remove their own recipes.
 **Depends on:** [Feature 1 — User Authentication & Session Management](./feature-list.md)
@@ -416,7 +416,9 @@ Each scenario in Acceptance Criteria maps to at least one automated test.
 No Gherkin scenario exercises `GET /recipeapi/recipes/:id` directly, so
 `backend/tests/recipes.test.js` adds three tests beyond the map — `Owner reads
 their own recipe`, `Reading another user's recipe is rejected`, and `Reading a
-recipe without a session is rejected` — to hold **FR-007** and **SC-003**.
+recipe without a session is rejected` — to hold **FR-007** and **SC-003**. A
+fourth, `Delete all leaves other users' recipes untouched`, holds **SC-003** for
+the delete-all route.
 
 ---
 
@@ -458,4 +460,4 @@ Do not implement behavior not in this spec.
 *   The shared ingredient list with units and prices ([Feature 4 — Ingredients Management](./feature-list.md))
 *   Exporting a recipe to PDF
 *   Recipe search, filtering, tags, and images
-*   `DELETE /recipeapi/recipes/` (delete-all) — not exposed in the UI and not needed by any story here
+*   Exposing `DELETE /recipeapi/recipes/` (delete-all) in the UI — no story here needs it. The route itself was scoped to the session user under **SC-003**, because it previously deleted every user's recipes.

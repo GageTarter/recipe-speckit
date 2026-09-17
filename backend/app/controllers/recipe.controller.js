@@ -295,10 +295,10 @@ exports.delete = async (req, res) => {
     });
   }
 };
-// Delete all Recipes from the database.
+// Delete all Recipes belonging to the authenticated user.
 exports.deleteAll = (req, res) => {
   Recipe.destroy({
-    where: {},
+    where: { userId: req.user.id },
     truncate: false,
   })
     .then((number) => {

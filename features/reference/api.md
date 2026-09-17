@@ -13,6 +13,7 @@ All recipe routes are mounted at `/recipeapi` (see `backend/app/routes/recipe.ro
 | GET | `/recipeapi/recipes/:id` | Yes | Read one of the session user's recipes |
 | PUT | `/recipeapi/recipes/:id` | Yes | Update one of the session user's recipes |
 | DELETE | `/recipeapi/recipes/:id` | Yes | Delete one of the session user's recipes |
+| DELETE | `/recipeapi/recipes/` | Yes | Delete all of the session user's recipes |
 
 ### POST `/recipeapi/recipes/`
 
@@ -72,6 +73,12 @@ Responds `200` with `{ "message": "Recipe was deleted successfully!" }`, and
 `404` when the recipe does not exist or belongs to another user. Deleting a
 recipe also deletes its steps and measured ingredients.
 
+### DELETE `/recipeapi/recipes/`
+
+Deletes every recipe owned by the session user and responds `200` with
+`{ "message": "<n> Recipes were deleted successfully!" }`. Other users' recipes
+are untouched. No screen calls this route.
+
 ## Conventions
 
 - Flat JSON responses (no `{ success, data }` envelope).
@@ -88,7 +95,6 @@ or test covers them yet:
 | Method | Path | Auth | Note |
 |--------|------|------|------|
 | GET | `/recipeapi/recipes/` | No | Lists all recipes where `isPublished` is true |
-| DELETE | `/recipeapi/recipes/` | Yes | Deletes **every** recipe for **every** user — not owner-scoped |
 
 Routes for auth, users, ingredients, recipe steps, and recipe ingredients are
 also mounted in `backend/server.js` but are not yet documented here; they belong

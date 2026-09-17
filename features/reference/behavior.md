@@ -43,10 +43,10 @@ They do **not** authorize new scope — implement only from `features/feature-*.
 | Rule | Enforcement | Introduced |
 |------|-------------|------------|
 | Deleting a recipe deletes its steps and measured ingredients | `ON DELETE CASCADE` on the recipe foreign keys in `backend/app/models/index.js` | Feature 2 |
+| Delete-all removes only the session user's recipes | `recipe.controller.js` `deleteAll` filters on `userId: req.user.id` | Feature 2 |
 
 ## Known gaps
 
 | Gap | Where |
 |-----|-------|
-| `DELETE /recipeapi/recipes/` deletes every recipe for every user; it checks for a session but not ownership | `recipe.controller.js` `deleteAll` |
 | There is no UI control for deleting a recipe, so US-2.5 is only exercised through the API | `frontend/src/views/RecipeList.vue` |
