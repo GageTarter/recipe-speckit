@@ -173,6 +173,43 @@ describe("Feature 2 — Recipe Management", () => {
     });
   });
 
+  // No Gherkin scenario covers the read-one route directly; these guard
+  // FR-007 and SC-003.
+  describe("FR-007 — Reading one recipe is owner-scoped", () => {
+    it("Owner reads their own recipe", async () => {
+      const recipe = await createRecipeFor(owner.id);
+
+      const response = await request(app)
+        .get(`/recipeapi/recipes/${recipe.id}`)
+        .set("Authorization", `Bearer ${ownerToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveLength(1);
+      expect(response.body[0].name).toBe("Chili");
+    });
+
+    it("Reading another user's recipe is rejected", async () => {
+      const recipe = await createRecipeFor(otherUser.id, { name: "Gumbo" });
+
+      const response = await request(app)
+        .get(`/recipeapi/recipes/${recipe.id}`)
+        .set("Authorization", `Bearer ${ownerToken}`);
+
+      expect(response.status).toBe(404);
+      expect(JSON.stringify(response.body)).not.toContain("Gumbo");
+    });
+
+    it("Reading a recipe without a session is rejected", async () => {
+      const recipe = await createRecipeFor(owner.id);
+
+      const response = await request(app).get(
+        `/recipeapi/recipes/${recipe.id}`
+      );
+
+      expect(response.status).toBe(401);
+    });
+  });
+
   describe("US-2.4 — Update a recipe's details", () => {
     it("Owner updates a recipe's servings", async () => {
       const recipe = await createRecipeFor(owner.id);

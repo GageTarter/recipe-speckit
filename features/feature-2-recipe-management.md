@@ -413,6 +413,11 @@ Each scenario in Acceptance Criteria maps to at least one automated test.
 | US-2.5 | Delete is rejected for another user's recipe | `backend/tests/recipes.test.js` | `Delete is rejected for another user's recipe` |
 | US-2.5 | Delete is rejected without a session | `backend/tests/recipes.test.js` | `Delete is rejected without a session` |
 
+No Gherkin scenario exercises `GET /recipeapi/recipes/:id` directly, so
+`backend/tests/recipes.test.js` adds three tests beyond the map — `Owner reads
+their own recipe`, `Reading another user's recipe is rejected`, and `Reading a
+recipe without a session is rejected` — to hold **FR-007** and **SC-003**.
+
 ---
 
 ## Agent implementation request
@@ -435,14 +440,14 @@ Do not implement behavior not in this spec.
 
 ## Definition of Done
 
-*   [ ] Backend and frontend implemented per this spec (**FR-001** through **FR-013** satisfied)
-*   [ ] **Success Criteria SC-001 through SC-003** met
-*   [ ] All 21 mapped tests pass (`cd backend && npx jest tests/recipes.test.js`, `cd frontend && npx vitest run tests/RecipeList.test.js tests/RecipeCardComponent.test.js`)
-*   [ ] Test Coverage Map complete, with one `it` per scenario using the exact scenario title
-*   [ ] `features/reference/data-model.md` updated for the `recipes` ownership and cascade changes
-*   [ ] `features/reference/api.md` updated for the recipe endpoints and their auth requirements
-*   [ ] `features/reference/behavior.md` updated for the recipe ownership rules
-*   [ ] Catalog row present in [project README §2.3](../README.md#23-feature-catalog)
+*   [x] Backend and frontend implemented per this spec (**FR-001** through **FR-013** satisfied)
+*   [x] **Success Criteria SC-001 through SC-003** met
+*   [x] All 21 mapped tests pass (`cd backend && npx jest tests/recipes.test.js`, `cd frontend && npx vitest run tests/RecipeList.test.js tests/RecipeCardComponent.test.js`)
+*   [x] Test Coverage Map complete, with one `it` per scenario using the exact scenario title
+*   [x] `features/reference/data-model.md` updated for the `recipes` ownership and cascade changes
+*   [x] `features/reference/api.md` updated for the recipe endpoints and their auth requirements
+*   [x] `features/reference/behavior.md` updated for the recipe ownership rules
+*   [x] Catalog row present in [project README §2.3](../README.md#23-feature-catalog)
 
 ---
 
