@@ -103,8 +103,14 @@ function closeSnackBar() {
         v-for="recipe in recipes"
         :key="recipe.id"
         :recipe="recipe"
-        @deletedList="getLists()"
+        @deletedList="getRecipes()"
       />
+
+      <v-card v-if="recipes.length === 0" class="rounded-lg elevation-5 mb-8">
+        <v-card-text class="text-center">
+          No recipes yet. Add your first recipe.
+        </v-card-text>
+      </v-card>
 
       <v-dialog persistent v-model="isAdd" width="800">
         <v-card class="rounded-lg elevation-5">
