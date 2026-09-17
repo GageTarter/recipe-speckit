@@ -207,7 +207,8 @@ For this course, **you** write the requirements half and the **data model**. You
 
 | ID | File | Branch | Depends on |
 |----|------|--------|------------|
-| — | *Add `feature-1-….md` after you write the first spec* | `feature/1-…` | — |
+| 1 | *Auth shipped with the starter; spec pending* | `feature/1-user-authentication` | — |
+| 2 | [feature-2-recipe-management.md](features/feature-2-recipe-management.md) | `feature/2-recipe-management` | 1 |
 
 New features: you own requirements + data model; Cursor helps with the remaining design sections. Still follow [features/framework.md](features/framework.md#feature-spec-template) for the overall shape of the file.
 
