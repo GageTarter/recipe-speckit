@@ -76,6 +76,7 @@
 - **FR-011**: A recipe card MUST show the recipe's name, servings, and time, and MUST expand on demand to show its ingredients and steps.
 - **FR-012**: Deleting a recipe MUST also remove that recipe's steps and measured ingredients, leaving no orphaned rows.
 - **FR-013**: System MUST return `404` with `` `Cannot find Recipe with id=${id}.` `` when the requested recipe does not exist.
+- **FR-014**: The Recipes page MUST let the owner delete a recipe only after they confirm in a dialog that names the recipe; cancelling MUST send no request and MUST leave the recipe listed.
 
 ---
 
@@ -94,12 +95,15 @@
 - Update or delete aimed at an id that does not exist → `404`.
 - Signed-in user with no recipes yet → Recipes page renders an empty state rather than an error.
 - Recipe with no ingredients and no steps → the card still expands, with both sections empty.
+- Clicking the delete icon then **Cancel** → no `DELETE` is sent and the recipe stays listed.
+- Clicking the delete icon does not expand or collapse the card.
 
 ## Success Criteria
 
 - **SC-001**: Every Gherkin scenario in this file has at least one automated test before merge.
 - **SC-002**: A signed-in user can create a recipe and see it on the Recipes page without reloading the browser.
 - **SC-003**: No request can read, change, or delete a recipe owned by another user.
+- **SC-004**: A signed-in user can delete a recipe from the Recipes page after confirming, and the recipe disappears without a browser reload.
 
 ---
 
@@ -288,6 +292,31 @@ Two deviations exist in the running app and must be corrected by this feature so
 *   **Then** the API returns `401`
 *   **And** recipe `1` still exists
 
+#### Scenario: Deleting a recipe asks for confirmation first
+*   **Given** I am on the Recipes page and I own a recipe `Chili`
+*   **When** I click the delete icon on the `Chili` card
+*   **Then** a confirmation dialog names `Chili`
+*   **And** no delete request has been sent yet
+
+#### Scenario: Confirming the dialog removes the recipe from the page
+*   **Given** the confirmation dialog for `Chili` is open
+*   **When** I confirm the deletion
+*   **Then** `DELETE /recipeapi/recipes/<id>` is sent for `Chili`
+*   **And** the Recipes page reloads the list without `Chili`
+*   **And** a snackbar reads `Chili deleted successfully!`
+
+#### Scenario: Cancelling the dialog keeps the recipe
+*   **Given** the confirmation dialog for `Chili` is open
+*   **When** I cancel the dialog
+*   **Then** no delete request is sent
+*   **And** `Chili` is still listed
+
+#### Scenario: The delete icon does not expand the card
+*   **Given** a recipe card for `Chili` is collapsed
+*   **When** I click the delete icon
+*   **Then** the card emits `requestDelete` with `Chili`
+*   **And** the ingredients and steps stay hidden
+
 ---
 
 ## Data Ownership & Isolation
@@ -363,7 +392,9 @@ Mount prefix is `/recipeapi/` (see [reference/api.md](./reference/api.md)).
 *   Shown only when signed in; a signed-out visitor sees the published list instead (Feature 6)
 *   One `RecipeCardComponent` per recipe, ordered by name ascending
 *   **Add Recipe dialog** — fields **Name**, **Number of Servings**, **Time to Make (in minutes)**, **Description**, and a **Publish?** switch reading `Publish? Yes` / `Publish? No`; actions **Close** and **Add Recipe**
-*   **Success feedback:** snackbar `"<name> added successfully!"`
+*   **Delete Recipe dialog** — opened by a card's `requestDelete` event; titled **Delete Recipe**, body names the recipe (`Delete "<name>"? This also deletes its ingredients and steps.`); actions **Cancel** and **Delete**. Nothing is sent until **Delete** is clicked.
+*   Owns the whole delete flow — dialog, `DELETE` call, feedback, and list refresh — because it already owns the snackbar and the list. Cards only request a deletion.
+*   **Success feedback:** snackbar `"<name> added successfully!"` on add, `"<name> deleted successfully!"` on delete; the list reloads after each
 *   **Empty state:** `"No recipes yet. Add your first recipe."`
 *   **Loading / error:** error responses surface the API `message` in a snackbar; a failed load must not leave the page blank with no explanation
 
@@ -372,7 +403,9 @@ Mount prefix is `/recipeapi/` (see [reference/api.md](./reference/api.md)).
 *   Shows the recipe name plus chips `"<servings> Servings"` and `"<time> minutes"`
 *   Clicking the card expands it to show **Ingredients** (quantity, unit, name, price per unit) and **Recipe Steps** (step number, instruction, attached ingredient chips), steps ordered by step number
 *   Expanded sections render empty rather than erroring when the recipe has no ingredients or steps
-*   Icon actions need accessible names: `aria-label` **Edit recipe** (`mdi-pencil`, routes to `editRecipe`). The PDF icon belongs to Feature 7.
+*   Icon actions need accessible names: `aria-label` **Edit recipe** (`mdi-pencil`, routes to `editRecipe`) and **Delete recipe** (`mdi-delete`, emits `requestDelete` with the recipe). The PDF icon belongs to Feature 7.
+*   Icon clicks must not also expand or collapse the card
+*   The card never calls the delete API itself; it only emits `requestDelete`
 
 ### [View: EditRecipe] — route name `editRecipe`, `props: true` on `/recipe/:id`
 
@@ -412,6 +445,10 @@ Each scenario in Acceptance Criteria maps to at least one automated test.
 | US-2.5 | Deleting a recipe removes its steps and ingredients | `backend/tests/recipes.test.js` | `Deleting a recipe removes its steps and ingredients` |
 | US-2.5 | Delete is rejected for another user's recipe | `backend/tests/recipes.test.js` | `Delete is rejected for another user's recipe` |
 | US-2.5 | Delete is rejected without a session | `backend/tests/recipes.test.js` | `Delete is rejected without a session` |
+| US-2.5 | Deleting a recipe asks for confirmation first | `frontend/tests/RecipeList.test.js` | `Deleting a recipe asks for confirmation first` |
+| US-2.5 | Confirming the dialog removes the recipe from the page | `frontend/tests/RecipeList.test.js` | `Confirming the dialog removes the recipe from the page` |
+| US-2.5 | Cancelling the dialog keeps the recipe | `frontend/tests/RecipeList.test.js` | `Cancelling the dialog keeps the recipe` |
+| US-2.5 | The delete icon does not expand the card | `frontend/tests/RecipeCardComponent.test.js` | `The delete icon does not expand the card` |
 
 No Gherkin scenario exercises `GET /recipeapi/recipes/:id` directly, so
 `backend/tests/recipes.test.js` adds three tests beyond the map — `Owner reads
@@ -442,9 +479,9 @@ Do not implement behavior not in this spec.
 
 ## Definition of Done
 
-*   [x] Backend and frontend implemented per this spec (**FR-001** through **FR-013** satisfied)
-*   [x] **Success Criteria SC-001 through SC-003** met
-*   [x] All 21 mapped tests pass (`cd backend && npx jest tests/recipes.test.js`, `cd frontend && npx vitest run tests/RecipeList.test.js tests/RecipeCardComponent.test.js`)
+*   [x] Backend and frontend implemented per this spec (**FR-001** through **FR-014** satisfied)
+*   [x] **Success Criteria SC-001 through SC-004** met
+*   [x] All 25 mapped tests pass (`cd backend && npx jest tests/recipes.test.js`, `cd frontend && npx vitest run tests/RecipeList.test.js tests/RecipeCardComponent.test.js`)
 *   [x] Test Coverage Map complete, with one `it` per scenario using the exact scenario title
 *   [x] `features/reference/data-model.md` updated for the `recipes` ownership and cascade changes
 *   [x] `features/reference/api.md` updated for the recipe endpoints and their auth requirements
