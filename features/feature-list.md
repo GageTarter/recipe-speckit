@@ -78,36 +78,59 @@
 **Independent test:** Delete one recipe and confirm it disappears from the Recipes page
 **Acceptance scenarios:** see ### US-2.5 under Acceptance Criteria
 
-## Feature 3: Ingredient Catalog Management
-**Short name:** `ingredient-catalog-management` · **Depends on:** Feature 1, Feature 2
-### US-3.1 Add a catalog ingredient
+## Feature 3: Recipe List Item Management
+**Short name:** `recipe-list-item-management` · **Depends on:** Feature 2, Feature 4
+**Scope note:** the items that make up one recipe — measured ingredients and numbered
+steps on the Edit Recipe screen. The shared ingredient list itself is Feature 4.
+### US-3.1 Add a measured ingredient to a recipe
 **As a** signed-in user
-**I want to** add an ingredient with a name, a unit of measure, and a price per unit
-**So that** I can reuse it across any recipe without retyping its details
+**I want to** add a quantity of an existing ingredient to one of my recipes
+**So that** the recipe records how much of each item it needs
 **Priority:** P1
-**Independent test:** Submit the Add Ingredient dialog and see the ingredient in the Ingredients table
+**Independent test:** Add one quantity plus ingredient on Edit Recipe and see it in that recipe's ingredient list
 **Acceptance scenarios:** see ### US-3.1 under Acceptance Criteria
-### US-3.2 Browse the ingredient catalog
+### US-3.2 Adjust a recipe's ingredient
 **As a** signed-in user
-**I want to** see every catalog ingredient with its unit and price
-**So that** I know what is already available before adding a duplicate
-**Priority:** P1
-**Independent test:** Open the Ingredients page and confirm each row shows name, unit, and price
-**Acceptance scenarios:** see ### US-3.2 under Acceptance Criteria
-### US-3.3 Correct an ingredient's unit or price
-**As a** signed-in user
-**I want to** edit a catalog ingredient's unit or price per unit
-**So that** recipe costs stay accurate when prices change
+**I want to** change the quantity of a recipe ingredient or swap it for a different one
+**So that** I can tune the recipe after cooking it
 **Priority:** P2
-**Independent test:** Edit one ingredient's price and confirm the table shows the new value
-**Acceptance scenarios:** see ### US-3.3 under Acceptance Criteria
-### US-3.4 Remove a catalog ingredient
+**Independent test:** Change one recipe ingredient's quantity and confirm the recipe shows the new amount
+**Acceptance scenarios:** see ### US-3.2 under Acceptance Criteria
+### US-3.3 Remove an ingredient from a recipe
 **As a** signed-in user
-**I want to** remove an ingredient I no longer stock
-**So that** the catalog does not fill up with things I cannot buy
-**Priority:** P3
-**Independent test:** Delete an unused ingredient and confirm it leaves the Ingredients table
+**I want to** remove an ingredient from a recipe
+**So that** the recipe stops listing something the dish does not use
+**Priority:** P2
+**Independent test:** Delete one recipe ingredient and confirm it leaves that recipe's list
+**Acceptance scenarios:** see ### US-3.3 under Acceptance Criteria
+### US-3.4 Add a numbered step
+**As a** signed-in user
+**I want to** add a step with a number and written instructions to my recipe
+**So that** someone can follow the dish in order
+**Priority:** P1
+**Independent test:** Add one step on Edit Recipe and see it in that recipe's step table
 **Acceptance scenarios:** see ### US-3.4 under Acceptance Criteria
+### US-3.5 Attach ingredients to a step
+**As a** signed-in user
+**I want to** mark which of the recipe's ingredients a given step uses
+**So that** a cook knows what to have ready before starting that step
+**Priority:** P1
+**Independent test:** Attach two ingredients to one step and confirm both appear on that step's row
+**Acceptance scenarios:** see ### US-3.5 under Acceptance Criteria
+### US-3.6 Edit a step
+**As a** signed-in user
+**I want to** change a step's number or its instructions
+**So that** I can fix mistakes or reorder the method
+**Priority:** P2
+**Independent test:** Edit one step's instruction and confirm the step table shows the new text
+**Acceptance scenarios:** see ### US-3.6 under Acceptance Criteria
+### US-3.7 Delete a step
+**As a** signed-in user
+**I want to** delete a step from my recipe
+**So that** the method does not include instructions I no longer follow
+**Priority:** P2
+**Independent test:** Delete one step and confirm it leaves that recipe's step table
+**Acceptance scenarios:** see ### US-3.7 under Acceptance Criteria
 
 
 
