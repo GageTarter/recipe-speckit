@@ -208,6 +208,7 @@ For this course, **you** write the requirements half and the **data model**. You
 | ID | File | Branch | Depends on |
 |----|------|--------|------------|
 | — | *Add `feature-1-….md` after you write the first spec* | `feature/1-…` | — |
+| 4 | `features/feature-4-ingredient-catalogue-management.md` | `feature/4-ingredient-catalogue-management` | Feature 1 |
 
 New features: you own requirements + data model; Cursor helps with the remaining design sections. Still follow [features/framework.md](features/framework.md#feature-spec-template) for the overall shape of the file.
 
