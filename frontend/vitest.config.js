@@ -2,13 +2,21 @@ import { defineConfig } from "vitest/config";
 import vue from "@vitejs/plugin-vue";
 import vuetify from "vite-plugin-vuetify";
 
-export default defineConfig({
-  plugins: [vue(), vuetify({ autoImport: true })],
-  resolve: {
-    alias: {
-      "/oc_logo.png": "/Applications/XAMPP/xamppfiles/htdocs/recipe-speckit/frontend/public/oc_logo.png",
+function stubOcLogo() {
+  return {
+    name: "stub-oc-logo",
+    enforce: "pre",
+    resolveId(id) {
+      if (id === "/oc_logo.png") return "\0oc_logo.png";
     },
-  },
+    load(id) {
+      if (id === "\0oc_logo.png") return 'export default "oc_logo.png";';
+    },
+  };
+}
+
+export default defineConfig({
+  plugins: [stubOcLogo(), vue(), vuetify({ autoImport: true })],
   test: {
     environment: "jsdom",
     globals: true,
