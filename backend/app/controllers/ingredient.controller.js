@@ -100,7 +100,6 @@ exports.findOne = (req, res) => {
         message: err.message || "Error retrieving Ingredient with id=" + id,
       });
     });
-  }
 };
 
 // Update a Ingredient by the id in the request
@@ -171,14 +170,7 @@ exports.delete = (req, res) => {
       res.status(500).send({
         message: err.message || "Could not delete Ingredient with id=" + id,
       });
-    } else {
-      return notFound(res, id);
-    }
-  } catch (err) {
-    res.status(500).send({
-      message: err.message || "Could not delete Ingredient with id=" + id,
     });
-  }
 };
 
 // Delete all Ingredients for the authenticated user
