@@ -1,4 +1,7 @@
 /**
+ * Feature 1 — User Authentication & Session Management
+ * Spec: features/feature-1-user-auth.md
+ *
  * Feature 6 — Profile Management
  * Spec: features/feature-6-profile-management.md
  */
@@ -17,7 +20,10 @@ vi.mock("/oc_logo.png", () => ({ default: "oc_logo.png" }));
 
 vi.mock("../src/services/UserServices.js", () => ({
   default: {
+    addUser: vi.fn(),
+    loginUser: vi.fn(),
     logoutUser: vi.fn(),
+    getUser: vi.fn(),
   },
 }));
 
@@ -76,12 +82,63 @@ async function mountBar(startPath = "/recipes") {
   return { wrapper, router };
 }
 
-async function openAccountMenu(wrapper) {
-  const activator = wrapper.findAll("button").find((btn) => btn.text().includes("AC"));
+async function openAccountMenu(wrapper, initials = "AC") {
+  const activator = wrapper
+    .findAll("button")
+    .find((btn) => btn.text().includes(initials));
   expect(activator).toBeTruthy();
   await activator.trigger("click");
   await flushPromises();
 }
+
+describe("Feature 1 — User Authentication & Session Management", () => {
+  describe("US-1.4 — Sign out", () => {
+    let wrapper;
+
+    beforeEach(() => {
+      localStorage.clear();
+      vi.clearAllMocks();
+      UserServices.logoutUser.mockResolvedValue({
+        data: { message: "Logged out successfully." },
+      });
+      vi.spyOn(console, "log").mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      wrapper?.unmount();
+      wrapper = undefined;
+      console.log.mockRestore?.();
+    });
+
+    it("Successfully sign out", async () => {
+      const account = {
+        email: "ada@example.com",
+        firstName: "Ada",
+        lastName: "Lovelace",
+        id: 7,
+        token: "test-token",
+      };
+      localStorage.setItem("user", JSON.stringify(account));
+
+      const mounted = await mountBar();
+      wrapper = mounted.wrapper;
+      const { router } = mounted;
+      const pushSpy = vi.spyOn(router, "push");
+
+      expect(wrapper.text()).toContain("AL");
+
+      await openAccountMenu(wrapper, "AL");
+      const logoutBtn = controlByText(wrapper, "Logout");
+      expect(logoutBtn).toBeTruthy();
+      await logoutBtn.trigger("click");
+      await flushPromises();
+
+      expect(UserServices.logoutUser).toHaveBeenCalled();
+      expect(localStorage.getItem("user")).toBeNull();
+      expect(pushSpy).toHaveBeenCalledWith({ name: "login" });
+    });
+  });
+});
 
 describe("Feature 6 — Profile Management", () => {
   let wrapper;
@@ -152,7 +209,9 @@ describe("Feature 6 — Profile Management", () => {
 
     it("Logout still signs the browser out if the server logout request fails", async () => {
       localStorage.setItem("user", JSON.stringify(ada));
-      UserServices.logoutUser.mockRejectedValue(new Error("Authentication required"));
+      UserServices.logoutUser.mockRejectedValue(
+        new Error("Authentication required")
+      );
       const mounted = await mountBar();
       wrapper = mounted.wrapper;
       const { router } = mounted;
