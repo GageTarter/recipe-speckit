@@ -78,36 +78,36 @@
 **Independent test:** Delete one recipe and confirm it disappears from the Recipes page
 **Acceptance scenarios:** see ### US-2.5 under Acceptance Criteria
 
-## Feature 3: Ingredient Catalog Management
+## Feature 4: Ingredient Catalog Management
 **Short name:** `ingredient-catalog-management` · **Depends on:** Feature 1, Feature 2
-### US-3.1 Add a catalog ingredient
+### US-4.1 Add a catalog ingredient
 **As a** signed-in user
 **I want to** add an ingredient with a name, a unit of measure, and a price per unit
 **So that** I can reuse it across any recipe without retyping its details
 **Priority:** P1
 **Independent test:** Submit the Add Ingredient dialog and see the ingredient in the Ingredients table
-**Acceptance scenarios:** see ### US-3.1 under Acceptance Criteria
-### US-3.2 Browse the ingredient catalog
+**Acceptance scenarios:** see ### US-4.1 under Acceptance Criteria
+### US-4.2 Browse the ingredient catalog
 **As a** signed-in user
 **I want to** see every catalog ingredient with its unit and price
 **So that** I know what is already available before adding a duplicate
 **Priority:** P1
 **Independent test:** Open the Ingredients page and confirm each row shows name, unit, and price
-**Acceptance scenarios:** see ### US-3.2 under Acceptance Criteria
-### US-3.3 Correct an ingredient's unit or price
+**Acceptance scenarios:** see ### US-4.2 under Acceptance Criteria
+### US-4.3 Correct an ingredient's unit or price
 **As a** signed-in user
 **I want to** edit a catalog ingredient's unit or price per unit
 **So that** recipe costs stay accurate when prices change
 **Priority:** P2
 **Independent test:** Edit one ingredient's price and confirm the table shows the new value
-**Acceptance scenarios:** see ### US-3.3 under Acceptance Criteria
-### US-3.4 Remove a catalog ingredient
+**Acceptance scenarios:** see ### US-4.3 under Acceptance Criteria
+### US-4.4 Remove a catalog ingredient
 **As a** signed-in user
 **I want to** remove an ingredient I no longer stock
 **So that** the catalog does not fill up with things I cannot buy
 **Priority:** P3
 **Independent test:** Delete an unused ingredient and confirm it leaves the Ingredients table
-**Acceptance scenarios:** see ### US-3.4 under Acceptance Criteria
+**Acceptance scenarios:** see ### US-4.4 under Acceptance Criteria
 
 
 

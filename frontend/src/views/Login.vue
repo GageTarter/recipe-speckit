@@ -41,9 +41,7 @@ async function createAccount() {
     })
     .catch((error) => {
       console.log(error);
-      snackbar.value.value = true;
-      snackbar.value.color = "error";
-      snackbar.value.text = error.response.data.message;
+      showError(error);
     });
 }
 
@@ -58,9 +56,7 @@ async function login() {
     })
     .catch((error) => {
       console.log(error);
-      snackbar.value.value = true;
-      snackbar.value.color = "error";
-      snackbar.value.text = error.response.data.message;
+      showError(error);
     });
 }
 
@@ -70,6 +66,17 @@ function openCreateAccount() {
 
 function closeCreateAccount() {
   isCreateAccount.value = false;
+}
+
+function showError(error) {
+  snackbar.value.value = true;
+  snackbar.value.color = "error";
+  snackbar.value.text =
+    error?.response?.data?.message ||
+    (error?.request && !error?.response
+      ? "Cannot reach the server. Is the backend running on port 3200?"
+      : error?.message) ||
+    "Something went wrong.";
 }
 
 function closeSnackBar() {
@@ -161,13 +168,18 @@ function closeSnackBar() {
         </v-card>
       </v-dialog>
 
-      <v-snackbar v-model="snackbar.value" rounded="pill">
-        {{ snackbar.text }}
+      <v-snackbar
+        v-model="snackbar.value"
+        :color="snackbar.color"
+        rounded="pill"
+        timeout="8000"
+      >
+        <span class="snackbar-message">{{ snackbar.text }}</span>
 
         <template v-slot:actions>
           <v-btn
-            :color="snackbar.color"
             variant="text"
+            class="snackbar-message"
             @click="closeSnackBar()"
           >
             Close
@@ -177,3 +189,10 @@ function closeSnackBar() {
     </div>
   </v-container>
 </template>
+
+<style>
+/* Snackbar content is teleported to <body>, so this cannot be scoped. */
+.v-snackbar .snackbar-message {
+  color: rgb(var(--v-theme-on-error)) !important;
+}
+</style>

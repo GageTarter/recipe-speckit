@@ -1,8 +1,5 @@
 const db = require("../models");
 const Ingredient = db.ingredient;
-const {
-  getAccessibleIngredientOrNull,
-} = require("../authorization/ingredientAccess");
 
 function parseIngredientId(param) {
   const id = parseInt(param, 10);
@@ -85,21 +82,23 @@ exports.findAll = (req, res) => {
 };
 
 // Find a single Ingredient with an id
-exports.findOne = async (req, res) => {
+exports.findOne = (req, res) => {
   const id = parseIngredientId(req.params.id);
   if (id === null) {
     return res.status(400).send({ message: "Invalid ingredientId." });
   }
 
-  try {
-    const data = await getAccessibleIngredientOrNull(req, id);
-    if (!data) {
-      return notFound(res, id);
-    }
-    res.send(data);
-  } catch (err) {
-    res.status(500).send({
-      message: err.message || "Error retrieving Ingredient with id=" + id,
+  Ingredient.findOne({ where: { id, userId: req.user.id } })
+    .then((data) => {
+      if (!data) {
+        return notFound(res, id);
+      }
+      res.send(data);
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message: err.message || "Error retrieving Ingredient with id=" + id,
+      });
     });
   }
 };
@@ -117,7 +116,9 @@ exports.update = async (req, res) => {
   }
 
   try {
-    const existing = await getAccessibleIngredientOrNull(req, id);
+    const existing = await Ingredient.findOne({
+      where: { id, userId: req.user.id },
+    });
     if (!existing) {
       return notFound(res, id);
     }
@@ -148,25 +149,27 @@ exports.update = async (req, res) => {
 };
 
 // Delete a Ingredient with the specified id in the request
-exports.delete = async (req, res) => {
+exports.delete = (req, res) => {
   const id = parseIngredientId(req.params.id);
   if (id === null) {
     return res.status(400).send({ message: "Invalid ingredientId." });
   }
 
-  try {
-    const existing = await getAccessibleIngredientOrNull(req, id);
-    if (!existing) {
-      return notFound(res, id);
-    }
-
-    const number = await Ingredient.destroy({
-      where: { id, userId: req.user.id },
-    });
-
-    if (number == 1) {
-      res.send({
-        message: "Ingredient was deleted successfully!",
+  Ingredient.destroy({
+    where: { id, userId: req.user.id },
+  })
+    .then((number) => {
+      if (number == 1) {
+        res.send({
+          message: "Ingredient was deleted successfully!",
+        });
+      } else {
+        return notFound(res, id);
+      }
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message: err.message || "Could not delete Ingredient with id=" + id,
       });
     } else {
       return notFound(res, id);
