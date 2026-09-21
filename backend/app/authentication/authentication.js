@@ -97,7 +97,14 @@ authenticateRoute = async (req, res, next) => {
       (typeof require !== "string" || require === "token")
     ) {
       let token = auth.slice(7);
-      let sessionId = await decrypt(token);
+      let sessionId;
+      try {
+        sessionId = await decrypt(token);
+      } catch (error) {
+        return res.status(401).send({
+          message: "Unauthorized! Expired Token, Logout and Login again",
+        });
+      }
       let session = {};
       await Session.findAll({ where: { id: sessionId } })
         .then((data) => {

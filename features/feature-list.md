@@ -2,7 +2,7 @@
 ### Capabilities
 
 ## Feature 1: User Authentication & Session Management — complete
-**Short name:** `user-authentication` · **Depends on:** —
+**Short name:** `user-auth` · **Depends on:** — · **File:** `features/feature-1-user-auth.md`
 ### US-1.1 Register an account
 **As a** new user
 **I want to** create an account with my first name, last name, email, and password
@@ -41,7 +41,7 @@
 
 
 ## Feature 2: Recipe Management
-**Short name:** `recipe-management` · **Depends on:** Feature 1
+**Short name:** `recipe-management` · **Depends on:** Feature 1 · **File:** `features/feature-2-recipe-management.md`
 ### US-2.1 Create a recipe
 **As a** signed-in user
 **I want to** create a recipe with a name, description, servings, and time to make
@@ -79,7 +79,7 @@
 **Acceptance scenarios:** see ### US-2.5 under Acceptance Criteria
 
 ## Feature 3: Recipe List Item Management
-**Short name:** `recipe-list-item-management` · **Depends on:** Feature 2, Feature 4
+**Short name:** `recipe-list-item-management` · **Depends on:** Feature 2, Feature 4 · **File:** `features/feature-3-recipe-list-item-management.md`
 **Scope note:** the items that make up one recipe — measured ingredients and numbered
 steps on the Edit Recipe screen. The shared ingredient list itself is Feature 4.
 ### US-3.1 Add a measured ingredient to a recipe
@@ -132,83 +132,83 @@ steps on the Edit Recipe screen. The shared ingredient list itself is Feature 4.
 **Independent test:** Delete one step and confirm it leaves that recipe's step table
 **Acceptance scenarios:** see ### US-3.7 under Acceptance Criteria
 
-
-
-## Feature 4: Ingredients Management
-**File Name:** features/feature-4-ingredients-management
-### US-4.1: Create an ingredient
-**As a** Authorized User  
-**I want to** create an ingredient item  
-**So that** I can use the ingredient in various recipes
-
-**Priority:** P1  
-**Independent test:** Create a valid usable ingredient  
+## Feature 4: Ingredient Catalogue Management
+**Short name:** `ingredient-catalogue-management` · **Depends on:** Feature 1 · **File:** `features/feature-4-ingredient-catalogue-management.md`
+### US-4.1 Add a catalogue ingredient
+**As a** signed-in user
+**I want to** add an ingredient with a name, a unit of measure, and a price per unit
+**So that** I can reuse it across any recipe without retyping its details
+**Priority:** P1
+**Independent test:** Submit the Add Ingredient dialog and see the ingredient in the Ingredients table
 **Acceptance scenarios:** see ### US-4.1 under Acceptance Criteria
-
-### US-4.2 Edit an ingredient 
-**As a** Authorized User  
-**I want to** be able to edit the values in an ingredient  
-**So that** I can change the ingredient’s values, such as units of measurement and price per unit, to be different than what was inputted on creation
-
-**Priority:** P1  
-**Independent test:** Successfully edit an existing ingredient  
+### US-4.2 Browse the ingredient catalogue
+**As a** signed-in user
+**I want to** see every catalogue ingredient with its unit and price
+**So that** I know what is already available before adding a duplicate
+**Priority:** P1
+**Independent test:** Open the Ingredients page and confirm each row shows name, unit, and price
 **Acceptance scenarios:** see ### US-4.2 under Acceptance Criteria
-
-### US-4.3 Delete an ingredient
-**As a** Authorized User  
-**I want to** delete an existing ingredient  
-**So that** I can no longer see or include it in recipes
-
-**Priority:** P1  
-**Independent test:** Delete an existing ingredient and clear its data  
+### US-4.3 Correct an ingredient's unit or price
+**As a** signed-in user
+**I want to** edit a catalogue ingredient's unit or price per unit
+**So that** recipe costs stay accurate when prices change
+**Priority:** P2
+**Independent test:** Edit one ingredient's price and confirm the table shows the new value
 **Acceptance scenarios:** see ### US-4.3 under Acceptance Criteria
+### US-4.4 Remove a catalogue ingredient
+**As a** signed-in user
+**I want to** remove an ingredient I no longer stock
+**So that** the catalogue does not fill up with things I cannot buy
+**Priority:** P3
+**Independent test:** Delete an unused ingredient and confirm it leaves the Ingredients table
+**Acceptance scenarios:** see ### US-4.4 under Acceptance Criteria
 
-## Feature 5: Ingredients List Management
-**File Name:** features/feature-5-ingredients-list-management 
-**Depend on:** Ingredients Management
+## Feature 5: Ingredients Management
+**Short name:** `ingredients-management` · **Depends on:** Feature 1, Feature 4 · **File:** `features/feature-5-ingredients-management.md`
+**Overlap:** Feature 5 extends Feature 4 on the same Ingredients screen. Create, browse, edit, and delete Gherkin titles are shared; tests live in one pair of files and must not duplicate `it()` names.
 ### US-5.1: View created ingredients
-**As a** Authorized User  
-**I want to** view the list of created ingredients  
+**As a** Authorized User
+**I want to** view the list of created ingredients
 **So that** I can keep track of which ingredients the software knows about
 
-**Priority:** P1  
-**Independent test:** Display all created ingredients  
+**Priority:** P1
+**Independent test:** Display all created ingredients
 **Acceptance scenarios:** see ### US-5.1 under Acceptance Criteria
 
-### US-5.2 Edit existing ingredients 
-**As a** Authorized User  
-**I want to** be able to edit the values of any created ingredient  
+### US-5.2 Edit existing ingredients
+**As a** Authorized User
+**I want to** be able to edit the values of any created ingredient
 **So that** I can change the values, such as units of measurement and price per unit, of any created ingredient to be different than what was inputted on creation
 
-**Priority:** P1  
-**Independent test:** Edit the existing ingredients  
+**Priority:** P1
+**Independent test:** Edit the existing ingredients
 **Acceptance scenarios:** see ### US-5.2 under Acceptance Criteria
 
 ### US-5.3 Delete existing ingredients
-**As a** Authorized User  
-**I want to** delete any of the existing ingredient s 
+**As a** Authorized User
+**I want to** delete any of the existing ingredients
 **So that** I can no longer see or include them in recipes
 
-**Priority:** P1  
-**Independent test:** Delete any existing ingredient and clear its data  
+**Priority:** P1
+**Independent test:** Delete any existing ingredient and clear its data
 **Acceptance scenarios:** see ### US-5.3 under Acceptance Criteria
 
 ## Feature 6: Profile Management
-**File Name:** features/feature-6-profile-management
+**Short name:** `profile-management` · **Depends on:** Feature 1 · **File:** `features/feature-6-profile-management.md`
 ### US-6.1: View Account
-**As a** Authorized User  
-**I want to** View the details of my account  
+**As a** Authorized User
+**I want to** View the details of my account
 **So that** I can see the name and username of my profile
 
-**Priority:** P1  
-**Independent test:** View the stored user data  
+**Priority:** P1
+**Independent test:** View the stored user data
 **Acceptance scenarios:** see ### US-6.1 under Acceptance Criteria
 
 ### US-6.2: Log out
-**As a** Logged-in User 
-**I want to** press the log-out button and sign out  
+**As a** Logged-in User
+**I want to** press the log-out button and sign out
 **So that** I am no longer logged into the program
 
-**Priority:** P1  
-**Independent test:** Log the user out and clear the local cache of user’s credentials  
+**Priority:** P1
+**Independent test:** Log the user out and clear the local cache of user’s credentials
 **Acceptance scenarios:** see ### US-6.2 under Acceptance Criteria

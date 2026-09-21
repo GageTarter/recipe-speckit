@@ -37,6 +37,18 @@ db.session.belongsTo(
   { foreignKey: { allowNull: false }, onDelete: "CASCADE" }
 );
 
+// foreign key for ingredient catalogue
+db.user.hasMany(
+  db.ingredient,
+  { as: "ingredient" },
+  { foreignKey: { allowNull: false }, onDelete: "CASCADE" }
+);
+db.ingredient.belongsTo(
+  db.user,
+  { as: "user" },
+  { foreignKey: { allowNull: false }, onDelete: "CASCADE" }
+);
+
 // foreign key for recipe
 db.user.hasMany(db.recipe, {
   as: "recipe",

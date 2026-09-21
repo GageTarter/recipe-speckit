@@ -1,8 +1,8 @@
 # API Reference
 
-**Living snapshot** of routes on `dev`. Update this file when endpoints change.
+**Living snapshot** of routes after Features 1–6. Update this file when endpoints change.
 
-All recipe routes are mounted at `/recipeapi`.
+All routes below are mounted at `/recipeapi`.
 
 ## Recipes
 
@@ -94,13 +94,32 @@ Create request:
 Create responds `200`. Missing `instruction` returns `400` with
 `"Description cannot be empty for recipe step!"`.
 
+## Ingredients
+
+| Method | Path | Auth | Notes |
+|--------|------|------|-------|
+| `GET` | `/recipeapi/ingredients` | Yes | Caller's ingredients, `name` ASC |
+| `POST` | `/recipeapi/ingredients` | Yes | Create; `201`; `userId` from session |
+| `PUT` | `/recipeapi/ingredients/:id` | Yes | Update owned row; `200` + success message |
+| `DELETE` | `/recipeapi/ingredients/:id` | Yes | Delete owned row; `200` or `204` |
+
+Starter `GET /recipeapi/ingredients/:id` and `DELETE /recipeapi/ingredients` (delete-all) remain authenticated and owner-scoped; they are not Feature 4/5 Gherkin.
+
+**Create body:** `{ "name": "Butter", "unit": "sticks", "pricePerUnit": 1.5 }`
+
+**Create `201`:** `{ "id": 1, "name": "Butter", "unit": "sticks", "pricePerUnit": 1.5, "userId": 42 }` (timestamps may also be present)
+
+**Update `200`:** `{ "message": "Ingredient was updated successfully." }`
+
 ## Conventions
 
 - Flat JSON responses (no `{ success, data }` envelope).
 - Errors: `{ "message": "..." }`.
 - Authenticated routes: `Authorization: Bearer <token>`; missing or expired
   tokens get `401`.
-- Another user's recipe or its items answers `404`, never `403`.
+- Another user's recipe, recipe item, or catalogue ingredient answers `404`, never `403`.
+- Ingredient name &gt; 100 chars → `Ingredient name must be 100 characters or fewer.`
+- Non-numeric `pricePerUnit` → `Ingredient price per unit must be a number.`
 
 ## Shipped but not covered by a feature spec
 
@@ -108,9 +127,8 @@ Create responds `200`. Missing `instruction` returns `400` with
 |--------|------|------|------|
 | GET | `/recipeapi/recipes/` | No | Lists all recipes where `isPublished` is true |
 
-Unscoped list-all and delete-all routes for ingredients and steps still exist
-on the routers. Auth, users, and the shared ingredient catalog belong to other
-features.
+Unscoped list-all and delete-all routes for recipe ingredients and steps still exist
+on the routers.
 
 ## Provenance
 
@@ -118,3 +136,4 @@ features.
 |------|---------------|
 | Recipe create / list / read / update / delete | Feature 2 — Recipe Management |
 | Recipe ingredient and step CRUD on a recipe | Feature 3 — Recipe List Item Management |
+| Catalogue ingredient create / list / update / delete | Feature 4 — Ingredient Catalogue Management; Feature 5 — Ingredients Management |

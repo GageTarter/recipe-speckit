@@ -6,11 +6,11 @@ module.exports = (app) => {
   // Create a new Ingredient
   router.post("/ingredients/", [authenticateRoute], Ingredient.create);
 
-  // Retrieve all Ingredient
-  router.get("/ingredients/", Ingredient.findAll);
+  // Retrieve all Ingredient for the signed-in user
+  router.get("/ingredients/", [authenticateRoute], Ingredient.findAll);
 
   // Retrieve a single Ingredient with ingredientId
-  router.get("/ingredients/:id", Ingredient.findOne);
+  router.get("/ingredients/:id", [authenticateRoute], Ingredient.findOne);
 
   // Update an Ingredient with ingredientId
   router.put("/ingredients/:id", [authenticateRoute], Ingredient.update);
