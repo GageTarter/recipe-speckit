@@ -151,7 +151,7 @@
 
 ### US-5.3 — Correct an ingredient's unit or price
 
-### Scenario: User edits an ingredient's information
+#### Scenario: User edits an ingredient's information
 *   **Given** I am signed in on the dashboard
 *   **When** I click **Edit Ingredient** on an existing ingredient
 *   **And** I change any of the original values
@@ -433,7 +433,7 @@ Do not implement behavior not in this spec.
 ## Out of Scope
 
 *   Sign-in, registration, and session issuance ([Feature 1](./feature-1-user-authentification.md))
-*   Defining the ingredient catalogue entity if Feature 4 already shipped it ([Feature 4](./feature-4-ingredient-catalogue-management.md)) — this feature consumes that entity on the existing Ingredients screen
+*   Defining the ingredient catalogue entity if Feature 4 already shipped it ([Feature 4](./feature-4-ingredient-catalogue-management.md)) — this feature consumes that entity on the existing Ingredients screen. Create/browse/edit/delete Gherkin titles are shared with Feature 4; keep one `it()` per title in `ingredients.test.js` / `IngredientList.test.js`.
 *   Attaching ingredients to recipes, recipe steps, or `recipeIngredient` quantity/unit on a recipe ([later recipe features](./feature-list.md))
 *   `GET /recipeapi/ingredients/:id` and `DELETE /recipeapi/ingredients` (delete-all) — starter routes; not in this feature’s Gherkin
 *   Profile / log out ([Feature 6](./feature-list.md))

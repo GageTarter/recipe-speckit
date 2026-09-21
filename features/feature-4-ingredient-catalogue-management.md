@@ -1,7 +1,7 @@
 # Feature: Ingredient Catalogue Management
 
 **Feature ID:** 4
-**Branch Pattern:** `feature/4-ingredient-catalogue-management`
+**Branch pattern:** `feature/4-ingredient-catalogue-management`
 **Status:** Ready
 **Created:** 2026-9-16
 **Input:** Ingredients created and managed by the user currently signed in
@@ -10,7 +10,7 @@
 
 ---
 
-# User Stories
+## User Stories
 
 ### US-4.1 Add a catalogue ingredient
 **As a** signed-in user
@@ -265,7 +265,7 @@ Unit of measure is a required field the user fills (Gherkin example `sticks`). T
 
 ### US-4.3 — Correct an ingredient's unit or price
 
-### Scenario: User edits an ingredient's information
+#### Scenario: User edits an ingredient's information
 *   **Given** I am signed in on the dashboard
 *   **When** I click **Edit Ingredient** on an existing ingredient
 *   **And** I change any of the original values
@@ -380,3 +380,4 @@ Do not implement behavior not in this spec.
 *   A shared or public ingredient catalogue (current unscoped `findAll` is not the product rule)
 *   Restricting units to a preset dropdown list
 *   Profile management
+*   Feature 5 — Ingredients Management extends this feature on the same Ingredients screen and shares these Gherkin titles; do not add a second `it()` per title

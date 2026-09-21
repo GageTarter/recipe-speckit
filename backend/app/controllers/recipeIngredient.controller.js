@@ -2,37 +2,58 @@ const db = require("../models");
 const RecipeIngredient = db.recipeIngredient;
 const Ingredient = db.ingredient;
 const Op = db.Sequelize.Op;
+const { getOwnedRecipeOrNull, getOwnedRecipeIngredientOrNull } = require("../authorization/recipeScope");
+
+const positiveQuantityOrNull = (value) => {
+  const number = Number(value);
+  if (!Number.isFinite(number) || number <= 0) {
+    return null;
+  }
+  return number;
+};
+
 // Create and Save a new RecipeIngredient
 exports.create = async (req, res) => {
   // Validate request
   if (req.body.quantity === undefined) {
-    const error = new Error("Quantity cannot be empty for recipe ingredient!");
-    error.statusCode = 400;
-    throw error;
+    return res.status(400).send({
+      message: "Quantity cannot be empty for recipe ingredient!",
+    });
   } else if (req.body.recipeId === undefined) {
-    const error = new Error("Recipe ID cannot be empty for recipe ingredient!");
-    error.statusCode = 400;
-    throw error;
+    return res.status(400).send({
+      message: "Recipe ID cannot be empty for recipe ingredient!",
+    });
   } else if (req.body.ingredientId === undefined) {
-    const error = new Error(
-      "Ingredient ID cannot be empty for recipe ingredient!"
-    );
-    error.statusCode = 400;
-    throw error;
+    return res.status(400).send({
+      message: "Ingredient ID cannot be empty for recipe ingredient!",
+    });
+  }
+
+  const quantity = positiveQuantityOrNull(req.body.quantity);
+  if (quantity === null) {
+    return res.status(400).send({
+      message: "Quantity cannot be empty for recipe ingredient!",
+    });
   }
 
   try {
-    const Recipe = db.recipe;
-    const recipe = await Recipe.findByPk(req.body.recipeId);
-    if (!recipe || recipe.userId !== req.user?.id) {
+    const recipe = await getOwnedRecipeOrNull(req, req.body.recipeId);
+    if (recipe === null) {
       return res.status(404).send({
         message: `Cannot find Recipe with id=${req.body.recipeId}.`,
       });
     }
 
+    const catalogItem = await Ingredient.findByPk(req.body.ingredientId);
+    if (catalogItem === null) {
+      return res.status(404).send({
+        message: `Cannot find Ingredient with id=${req.body.ingredientId}.`,
+      });
+    }
+
     const recipeIngredient = {
-      quantity: req.body.quantity,
-      recipeId: req.body.recipeId,
+      quantity: quantity,
+      recipeId: recipe.id,
       recipeStepId: req.body.recipeStepId ? req.body.recipeStepId : null,
       ingredientId: req.body.ingredientId,
     };
@@ -71,8 +92,13 @@ exports.findAll = (req, res) => {
     });
 };
 
-exports.findAllForRecipe = (req, res) => {
+exports.findAllForRecipe = async (req, res) => {
   const recipeId = req.params.recipeId;
+  if ((await getOwnedRecipeOrNull(req, recipeId)) === null) {
+    return res.status(404).send({
+      message: `Cannot find Recipe with id=${recipeId}.`,
+    });
+  }
   RecipeIngredient.findAll({
     where: { recipeId: recipeId },
     include: [
@@ -138,11 +164,26 @@ exports.findOne = (req, res) => {
 };
 
 // Update a RecipeIngredient by the id in the request
-exports.update = (req, res) => {
+exports.update = async (req, res) => {
   const id = req.params.id;
+  const existing = await getOwnedRecipeIngredientOrNull(req, id);
+  if (existing === null) {
+    return res.status(404).send({
+      message: `Cannot find RecipeIngredient with id=${id}.`,
+    });
+  }
+  if (req.body.quantity !== undefined) {
+    const quantity = positiveQuantityOrNull(req.body.quantity);
+    if (quantity === null) {
+      return res.status(400).send({
+        message: "Quantity cannot be empty for recipe ingredient!",
+      });
+    }
+    req.body.quantity = quantity;
+  }
 
   RecipeIngredient.update(req.body, {
-    where: { id: id },
+    where: { id: existing.id },
   })
     .then((number) => {
       if (number == 1) {
@@ -163,11 +204,17 @@ exports.update = (req, res) => {
 };
 
 // Delete a RecipeIngredient with the specified id in the request
-exports.delete = (req, res) => {
+exports.delete = async (req, res) => {
   const id = req.params.id;
+  const existing = await getOwnedRecipeIngredientOrNull(req, id);
+  if (existing === null) {
+    return res.status(404).send({
+      message: `Cannot find RecipeIngredient with id=${id}.`,
+    });
+  }
 
   RecipeIngredient.destroy({
-    where: { id: id },
+    where: { id: existing.id },
   })
     .then((number) => {
       if (number == 1) {

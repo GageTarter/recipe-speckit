@@ -207,9 +207,12 @@ For this course, **you** write the requirements half and the **data model**. You
 
 | ID | File | Branch | Depends on |
 |----|------|--------|------------|
-| — | *Add `feature-1-….md` after you write the first spec* | `feature/1-…` | — |
-| 4 | `features/feature-4-ingredient-catalogue-management.md` | `feature/4-ingredient-catalogue-management` | Feature 1 |
+| 1 | [feature-1-user-auth.md](features/feature-1-user-auth.md) | `feature/1-user-auth` | — |
+| 2 | [feature-2-recipe-management.md](features/feature-2-recipe-management.md) | `feature/2-recipe-management` | Feature 1 |
+| 3 | [feature-3-recipe-list-item-management.md](features/feature-3-recipe-list-item-management.md) | `feature/3-recipe-list-item-management` | Feature 2, Feature 4 |
+| 4 | [feature-4-ingredient-catalogue-management.md](features/feature-4-ingredient-catalogue-management.md) | `feature/4-ingredient-catalogue-management` | Feature 1 |
 | 5 | [feature-5-ingredients-management.md](features/feature-5-ingredients-management.md) | `feature/5-ingredients-management` | Feature 1, Feature 4 |
+| 6 | [feature-6-profile-management.md](features/feature-6-profile-management.md) | `feature/6-profile-management` | Feature 1 |
 
 New features: you own requirements + data model; Cursor helps with the remaining design sections. Still follow [features/framework.md](features/framework.md#feature-spec-template) for the overall shape of the file.
 
